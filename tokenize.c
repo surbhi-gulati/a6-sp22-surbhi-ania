@@ -2,6 +2,44 @@
 
 #include "tokenize.h"
 
+// Add a quoted token from the given input to the given buffer vector, 
+// starting at the given index. Do not include the closing quote. 
+// Return the index following the closing quote.
+int quoted_token(char* input, vect_t* buf, char start_symbol, int fst_idx) {
+        char* quote = "";
+        int i = fst_idx + 1;
+        while (input[i] != start_symbol) {
+                quote = strcat(quote, input[i]);
+        }
+        const char* token;
+        strncpy(token, quote, strlen(quote) + 1);
+        vect_add(buf, token);
+        free(quote);
+
+        return i + 1;
+}
+
+// Adds the string in cur_word to the buffer if it is not empty. If empty, does not add anything to the buffer
+void addCurWord(char cur_word, vect_t* buf) {
+        if (strlen(cur_word) > 0) {
+                const char* token;
+                strncpy(token, cur_word, strlen(cur_word) + 1);
+                vect_add(buf, token);
+                free(token);
+        }
+}
+
+// Checks if an input string is a member of the passed string array
+// Returns 1 if true, 0 if false
+int contains(char* array, char element) {
+        for (int i = 0; i < (sizeof array / sizeof array[0]); i++) {
+                if (array[i] == element) {
+                        return 1;
+                }
+        }
+        return 0;
+}
+
 // Returns a vect of the tokens in a String input
 vect_t* tokenize(char* input, int max_tokens) {
 
@@ -60,44 +98,6 @@ vect_t* tokenize(char* input, int max_tokens) {
 
 	free(cur_word);
 	return buf;
-}
-
-// Adds the string in cur_word to the buffer if it is not empty. If empty, does not add anything to the buffer
-void addCurWord(char cur_word, vect_t* buf) {
-	if (strlen(cur_word) > 0) {
-                const char* token;
-                strncpy(token, cur_word, strlen(cur_word) + 1);
-                vect_add(buf, token);
-                free(token);
-        }
-}
-
-// Checks if an input string is a member of the passed string array
-// Returns 1 if true, 0 if false
-int contains(char* array, char element) {
-	for (int i = 0; i < (sizeof array / sizeof array[0]); i++) {
-		if (array[i] == element) {
-			return 1;
-		}
-	}
-	return 0;
-}
-
-// Add a quoted token from the given input to the given buffer vector, 
-// starting at the given index. Do not include the closing quote. 
-// Return the index following the closing quote.
-int quoted_token(char* input, vect_t* buf, char start_symbol, int fst_idx) {
-	char* quote = "";
-	int i = fst_idx + 1;
-	while (input[i] != start_symbol) {
-		quote = strcat(quote, input[i]);
-	}
-	const char* token;
-        strncpy(token, quote, strlen(quote) + 1);
-        vect_add(buf, token);
-        free(quote);
-
-	return i + 1;
 }
 
 
