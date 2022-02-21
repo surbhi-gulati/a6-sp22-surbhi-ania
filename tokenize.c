@@ -101,7 +101,7 @@ vect_t* tokenize(char* input, int max_tokens) {
 int main(int argc, char **argv) {
 	// transform **argv into array of chars
 	char expr[MAX_STRLEN];
-	strncpy(expr, argv[0], strlen(argv[0])); // copy given string argument argv[0] in to expr
+	strncpy(expr, argv[1], strlen(argv[1])); // copy given string argument in to expr
 	
 	// call tokenize to create a vector of tokens
 	vect_t *tokens = tokenize(expr, MAX_STRLEN);
