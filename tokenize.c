@@ -1,6 +1,18 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "tokenize.h"
+
+// Adds the string in cur_word to the buffer if it is not empty. If empty,     does not add anything to the buffer
+void addCurWord(char* cur_word, vect_t* buf) {
+	if (strlen(cur_word) > 0) {
+                char* temp = cur_word;
+                const char *token = temp;
+                vect_add(buf, token);
+                free(temp);
+	}
+ }
 
 // Add a quoted token from the given input to the given buffer vector, 
 // starting at the given index. Do not include the closing quote. 
@@ -9,24 +21,11 @@ int quoted_token(char* input, vect_t* buf, char start_symbol, int fst_idx) {
         char* quote = "";
         int i = fst_idx + 1;
         while (input[i] != start_symbol) {
-                quote = strcat(quote, input[i]);
+                quote = strncat(quote, &input[i], sizeof(input[i]));
         }
-        const char* token;
-        strncpy(token, quote, strlen(quote) + 1);
-        vect_add(buf, token);
-        free(quote);
+	addCurWord(quote, buf);
 
         return i + 1;
-}
-
-// Adds the string in cur_word to the buffer if it is not empty. If empty, does not add anything to the buffer
-void addCurWord(char cur_word, vect_t* buf) {
-        if (strlen(cur_word) > 0) {
-                const char* token;
-                strncpy(token, cur_word, strlen(cur_word) + 1);
-                vect_add(buf, token);
-                free(token);
-        }
 }
 
 // Checks if an input string is a member of the passed string array
@@ -53,7 +52,7 @@ vect_t* tokenize(char* input, int max_tokens) {
 	int i = 0; // current position in string
 	while (input[i] != '\0' && i < max_tokens) { // while the end of string is not reached
 		// first check if the current char is a quote
-	  	if (input[i] == "\"" || input[i] == "\'") {
+	  	if (strncmp(&input[i], "\"", 1) == 0 || strncmp(&input[i], "\'", 1) == 0) {
 			// read the following values until another quote found
 			// and add the string between first and next quote to the buffer
 			// set i = next index a quote is found + 1 to parse next token
@@ -69,11 +68,8 @@ vect_t* tokenize(char* input, int max_tokens) {
 			addCurWord(cur_word, buf);
 
 			// add special symbol as a token
-			const char* token;
-			strncpy(token, input[i], strlen(input[i] + 1));
-			vect_add(buf, token);
+			addCurWord(&input[i], buf);
 			i++;
-			free(token);
 		}
 		
 		// if encounter a whitespace character
@@ -88,7 +84,7 @@ vect_t* tokenize(char* input, int max_tokens) {
 		// if encountering no special symbol or whitespace, value belongs to new word
 		// create vector to build a word as part of a new token
 		else {
-			cur_word = strcat(cur_word, input[i]);
+			cur_word = strncat(cur_word, &input[i], sizeof(input[i]));
 			i++;	
 		}
 	}
@@ -112,7 +108,7 @@ int main(int argc, char **argv) {
 		
 	// print all of the tokens in vect_t
 	for (int i = 0; i < vect_size(tokens); i++) {
-		printf("%s\n", tokens[i]);
+		printf("%s\n", vect_get_copy(tokens, i));
 	}
 
 	return 0;

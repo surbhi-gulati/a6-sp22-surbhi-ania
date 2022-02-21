@@ -1,7 +1,7 @@
 #ifndef _TOKENIZE_H
 #define _TOKENIZE_H
 
-#include "vect.c"
+#include "vect.h"
 
 
 
