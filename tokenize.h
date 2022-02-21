@@ -7,4 +7,4 @@
 
 #define MAX_STRLEN 300
 
-#endif /* ifndef _TOKENIZE_H *?
+#endif /* ifndef _TOKENIZE_H */
