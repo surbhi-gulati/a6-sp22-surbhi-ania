@@ -7,7 +7,7 @@ vect_t* tokenize(char* input) {
 
 	vect_t *buf = vect_new(); // stores all tokens
 	// TODO: create helper func to copy contents in to a string that will be added to buf
-	vect_t *cur_word = vect_new(); // stores current word being built
+	char* cur_word = ""; // stores current word being built
 
 	char special_symbols[6] = {'(', ')', '<', '>', ';', '|'}; // get own tokens if not quoted
 	char white_spaces[2] = {' ', '\t'}; // whitespaces
@@ -20,7 +20,7 @@ vect_t* tokenize(char* input) {
 			// read the following values until another quote found
 			// // and add the string between first and next quote to the buffer
 			// // set i = next index a quote is found + 1 to parse next token
-			i = quoted_token(&input[i], buf, i);
+			i = quoted_token(&input, buf, i);
 		}
 
 		// if current char is a special symbol
@@ -28,6 +28,17 @@ vect_t* tokenize(char* input) {
 		else if (contains(special_symbols, input[i]) == 1) {
 			// need to reset cur_word
                         // add if full
+			const char* old_word;
+			strncpy(old_word, cur_word, strlen(cur_word) + 1);
+			cur_word = "";
+			vect_add(buf, old_word);
+
+			const char* token;
+			strncpy(token, input[i], strlen(input[i] + 1));
+			vect_add(buf, token);
+			i++;
+			free(token);
+			free(old_word);
 		}
 		
 		// if encounter a whitespace character
@@ -36,6 +47,12 @@ vect_t* tokenize(char* input) {
 		else if (contains(white_spaces, input[i]) == 1) {
 			// need to reset cur_word
 			// add if full
+			const char* token;
+			strncpy(token, cur_word, strlen(cur_word) + 1);
+                        cur_word = "";
+			vect_add(buf, token);
+			i++;
+			free(token);
 		}	
 
 		// if encountering no special symbol or whitespace, value belongs to new word
@@ -72,5 +89,8 @@ int quoted_token(**input, buffer, fst_idx) {
 	while (input[i] != "\"" && input[i] != "\'") {
 		quote = strcat(quote, input[i]);
 	}
+	const char* token = quote;
+	vect_add(buf, token);
 
+	return i + 1;
 }
