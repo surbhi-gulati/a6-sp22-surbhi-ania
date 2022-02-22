@@ -18,8 +18,9 @@ static void add_cur_word(char* cur_word, vect_t* buf) {
 static int quoted_token(char* input, vect_t* buf, char start_symbol, int fst_idx) {
         char quote[MAX_STRLEN];
         int i = fst_idx + 1;
-        while (strncmp(&input[i], "" + start_symbol, 1) != 0) {
+        while (strncmp(&input[i], "\"", 1) != 0) {
                 strncat(quote, &input[i], sizeof(input[i]));
+		i++;
         }
 	add_cur_word(quote, buf);
 
@@ -100,10 +101,10 @@ vect_t* tokenize(char* input, int max_tokens) {
 
 // Main driver for tokenizer: tokenize given string, then print all tokens up to 
 // max number of tokens allowed.
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
 	// transform **argv into array of chars
 	char expr[MAX_STRLEN];
-	strncpy(expr, argv[1], strlen(argv[1])); // copy given string argument in to expr
+	fgets(expr, MAX_STRLEN, stdin); // copy given string argument in to expr
 	
 	// call tokenize to create a vector of tokens
 	vect_t *tokens = tokenize(expr, MAX_STRLEN);
