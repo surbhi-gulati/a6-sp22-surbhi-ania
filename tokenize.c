@@ -15,7 +15,7 @@ static void add_cur_word(char* cur_word, vect_t* buf) {
 // Add a quoted token from the given input to the given buffer vector, 
 // starting at the given index. Do not include the closing quote. 
 // Return the index following the closing quote.
-static int quoted_token(char* input, vect_t* buf, char start_symbol, int fst_idx) {
+static int quoted_token(char* input, vect_t* buf, int fst_idx) {
         char quote[MAX_STRLEN];
         int i = fst_idx + 1;
         while (strncmp(&input[i], "\"", 1) != 0) {
@@ -53,14 +53,14 @@ vect_t* tokenize(char* input, int max_tokens) {
 	while (input[i] != '\0' && i < max_tokens) { // while the end of string is not reached
 
 		// first check if the current char is a quote
-	  	if (strncmp(&input[i], "\"", 1) == 0 || strncmp(&input[i], "\'", 1) == 0) {
+	  	if (strncmp(&input[i], "\"", 1) == 0) {
 			// adds the current word stored into the buffer before processing next token
 			add_cur_word(cur_word, buf);
 			memset(cur_word, '\0', max_tokens);
 
 			// read following values till closing quote is found; progress counter i
 			// to index following the closing quote
-			i = quoted_token(input, buf, input[i], i);
+			i = quoted_token(input, buf, i);
 		}
 
 		// if current char is a special symbol
