@@ -16,7 +16,7 @@ static void add_cur_word(char* cur_word, vect_t* buf) {
 // starting at the given index. Do not include the closing quote. 
 // Return the index following the closing quote.
 static int quoted_token(char* input, vect_t* buf, int fst_idx) {
-        char quote[MAX_STRLEN];
+        char quote[MAX_STRLEN] = "\0";
         int i = fst_idx + 1;
         while (strncmp(&input[i], "\"", 1) != 0) {
                 strncat(quote, &input[i], sizeof(input[i]));
@@ -43,7 +43,7 @@ static int contains(char* array, char element) {
 vect_t* tokenize(char* input, int max_tokens) {
 
 	vect_t *buf = vect_new(); // stores all tokens
-	char cur_word[MAX_STRLEN]; // stores current word being built
+	char cur_word[MAX_STRLEN] = "\0"; // stores current word being built
 
 	char special_symbols[6] = {'(', ')', '<', '>', ';', '|'}; // get own tokens if not quoted
 	char white_spaces[2] = {' ', '\t'}; // whitespaces
@@ -105,6 +105,7 @@ int main(int argc, char *argv[]) {
 	// transform **argv into array of chars
 	char expr[MAX_STRLEN];
 	fgets(expr, MAX_STRLEN, stdin); // copy given string argument in to expr
+	expr[strcspn(expr, "\n")] = 0;
 	
 	// call tokenize to create a vector of tokens
 	vect_t *tokens = tokenize(expr, MAX_STRLEN);
