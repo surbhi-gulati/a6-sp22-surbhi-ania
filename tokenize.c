@@ -10,16 +10,16 @@ static void add_cur_word(char* cur_word, vect_t* buf) {
 		const char *token = cur_word;
 		vect_add(buf, token);
 	}
- }
+}
 
 // Add a quoted token from the given input to the given buffer vector, 
 // starting at the given index. Do not include the closing quote. 
 // Return the index following the closing quote.
 static int quoted_token(char* input, vect_t* buf, char start_symbol, int fst_idx) {
-        char* quote = "";
+        char quote[MAX_STRLEN];
         int i = fst_idx + 1;
         while (strncmp(&input[i], "" + start_symbol, 1) != 0) {
-                quote = strncat(quote, &input[i], sizeof(input[i]));
+                strncat(quote, &input[i], sizeof(input[i]));
         }
 	add_cur_word(quote, buf);
 
@@ -42,7 +42,7 @@ static int contains(char* array, char element) {
 vect_t* tokenize(char* input, int max_tokens) {
 
 	vect_t *buf = vect_new(); // stores all tokens
-	char* cur_word = ""; // stores current word being built
+	char cur_word[MAX_STRLEN]; // stores current word being built
 
 	char special_symbols[6] = {'(', ')', '<', '>', ';', '|'}; // get own tokens if not quoted
 	char white_spaces[2] = {' ', '\t'}; // whitespaces
@@ -54,8 +54,8 @@ vect_t* tokenize(char* input, int max_tokens) {
 		// first check if the current char is a quote
 	  	if (strncmp(&input[i], "\"", 1) == 0 || strncmp(&input[i], "\'", 1) == 0) {
 			// adds the current word stored into the buffer before processing next token
-		add_cur_word(cur_word, buf);
-			cur_word = "";
+			add_cur_word(cur_word, buf);
+			memset(cur_word, '\0', max_tokens);
 
 			// read following values till closing quote is found; progress counter i
 			// to index following the closing quote
@@ -66,10 +66,13 @@ vect_t* tokenize(char* input, int max_tokens) {
 		// save current value as token & save current char as token in buffer
 		else if (contains(special_symbols, input[i]) == 1) {
 			add_cur_word(cur_word, buf);
-			cur_word = "";
+			memset(cur_word, '\0', max_tokens);
 
 			// add special symbol as a token
-			add_cur_word(&input[i], buf);
+			char token[1] = {input[i]};
+			printf("Input[i]: %c\n", input[i]);
+			printf("Token: %s\n", token);
+			add_cur_word(token, buf);
 			i++;
 		}
 		
@@ -78,14 +81,14 @@ vect_t* tokenize(char* input, int max_tokens) {
 		// if no value is being built, simply proceed to next char
 		else if (contains(white_spaces, input[i]) == 1) {
                         add_cur_word(cur_word, buf);
-			cur_word = "";
+			memset(cur_word, '\0', max_tokens);
 			i++;
 		}	
 
 		// if encountering no special symbol or whitespace, value belongs to new word
 		// create vector to build a word as part of a new token
 		else {
-			cur_word = strncat(cur_word, &input[i], sizeof(input[i]));
+			strncat(cur_word, &input[i], sizeof(input[i]));
 			i++;	
 		}
 	}
