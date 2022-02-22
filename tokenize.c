@@ -54,7 +54,7 @@ vect_t* tokenize(char* input, int max_tokens) {
 		// first check if the current char is a quote
 	  	if (strncmp(&input[i], "\"", 1) == 0 || strncmp(&input[i], "\'", 1) == 0) {
 			// adds the current word stored into the buffer before processing next token
-			add_cur_word(cur_word, buf);
+		add_cur_word(cur_word, buf);
 			cur_word = "";
 
 			// read following values till closing quote is found; progress counter i
@@ -92,7 +92,7 @@ vect_t* tokenize(char* input, int max_tokens) {
 
 	// empty the current word in to buffer
 	add_cur_word(cur_word, buf);
-	free(cur_word);
+	// free(cur_word);
 	return buf;
 }
 
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < vect_size(tokens); i++) {
 		printf("%s\n", vect_get_copy(tokens, i));
 	}
-	free(tokens);
+	vect_delete(tokens);
 
 	return 0;
 }
