@@ -29,9 +29,9 @@ static int quoted_token(char* input, vect_t* buf, int fst_idx) {
 
 // Checks if an input string is a member of the passed string array.
 // Returns 1 if true, 0 if false.
-static int contains(char* array, char element) {
-        for (int i = 0; i < (sizeof(array) / sizeof(array[0])); i++) {
-                if (array[i] == element) {
+static int contains(const char** array, const char* element) {
+        for (int i = 1; i < (sizeof(array) / sizeof(*array)); i++) {
+                if (strncmp(array[i], element, 1) == 0) {
                         return 1;
                 }
         }
@@ -45,8 +45,8 @@ vect_t* tokenize(char* input, int max_tokens) {
 	vect_t *buf = vect_new(); // stores all tokens
 	char cur_word[MAX_STRLEN] = "\0"; // stores current word being built
 
-	char special_symbols[6] = {'(', ')', '<', '>', ';', '|'}; // get own tokens if not quoted
-	char white_spaces[2] = {' ', '\t'}; // whitespaces
+	const char* special_symbols[] = {"(",")","<",">",";","|"}; // get own tokens if not quoted
+	const char* white_spaces[] = {" ","\t"}; // whitespaces
 
 	// iterate through string and collect and add tokens to buffer
 	int i = 0; // current position in string
@@ -65,7 +65,7 @@ vect_t* tokenize(char* input, int max_tokens) {
 
 		// if current char is a special symbol
 		// save current value as token & save current char as token in buffer
-		else if (contains(special_symbols, input[i]) == 1) {
+		else if (contains(special_symbols, &input[i]) == 1) {
 			add_cur_word(cur_word, buf);
 			memset(cur_word, '\0', max_tokens);
 
@@ -79,7 +79,7 @@ vect_t* tokenize(char* input, int max_tokens) {
 		// if encounter a whitespace character
 		// save current value as token and proceed to next char
 		// if no value is being built, simply proceed to next char
-		else if (contains(white_spaces, input[i]) == 1) {
+		else if (contains(white_spaces, &input[i]) == 1) {
                         add_cur_word(cur_word, buf);
 			memset(cur_word, '\0', max_tokens);
 			i++;
