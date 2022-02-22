@@ -69,10 +69,9 @@ vect_t* tokenize(char* input, int max_tokens) {
 			memset(cur_word, '\0', max_tokens);
 
 			// add special symbol as a token
-			char token[1] = {input[i]};
-			printf("Input[i]: %c\n", input[i]);
-			printf("Token: %s\n", token);
-			add_cur_word(token, buf);
+			strncat(cur_word, &input[i], sizeof(input[i]));
+			add_cur_word(cur_word, buf);
+			memset(cur_word, '\0', max_tokens);
 			i++;
 		}
 		
