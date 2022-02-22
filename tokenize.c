@@ -4,34 +4,32 @@
 
 #include "tokenize.h"
 
-// Adds the string in cur_word to the buffer if it is not empty. If empty,     does not add anything to the buffer
-void addCurWord(char* cur_word, vect_t* buf) {
+// Adds the current word to the buffer iff it is not empty. 
+static void add_cur_word(char* cur_word, vect_t* buf) {
 	if (strlen(cur_word) > 0) {
-                char* temp = cur_word;
-                const char *token = temp;
-                vect_add(buf, token);
-                free(temp);
+		const char *token = cur_word;
+		vect_add(buf, token);
 	}
  }
 
 // Add a quoted token from the given input to the given buffer vector, 
 // starting at the given index. Do not include the closing quote. 
 // Return the index following the closing quote.
-int quoted_token(char* input, vect_t* buf, char start_symbol, int fst_idx) {
+static int quoted_token(char* input, vect_t* buf, char start_symbol, int fst_idx) {
         char* quote = "";
         int i = fst_idx + 1;
-        while (input[i] != start_symbol) {
+        while (strncmp(&input[i], "" + start_symbol, 1) != 0) {
                 quote = strncat(quote, &input[i], sizeof(input[i]));
         }
-	addCurWord(quote, buf);
+	add_cur_word(quote, buf);
 
         return i + 1;
 }
 
-// Checks if an input string is a member of the passed string array
-// Returns 1 if true, 0 if false
-int contains(char* array, char element) {
-        for (int i = 0; i < (sizeof array / sizeof array[0]); i++) {
+// Checks if an input string is a member of the passed string array.
+// Returns 1 if true, 0 if false.
+static int contains(char* array, char element) {
+        for (int i = 0; i < (sizeof(array) / sizeof(array[0])); i++) {
                 if (array[i] == element) {
                         return 1;
                 }
@@ -39,7 +37,8 @@ int contains(char* array, char element) {
         return 0;
 }
 
-// Returns a vect of the tokens in a String input
+// Returns a vector of the tokens in the given input, capping tokenization at the maximum number
+// of characters to read that is provided..
 vect_t* tokenize(char* input, int max_tokens) {
 
 	vect_t *buf = vect_new(); // stores all tokens
@@ -51,24 +50,26 @@ vect_t* tokenize(char* input, int max_tokens) {
 	// iterate through string and collect and add tokens to buffer
 	int i = 0; // current position in string
 	while (input[i] != '\0' && i < max_tokens) { // while the end of string is not reached
+
 		// first check if the current char is a quote
 	  	if (strncmp(&input[i], "\"", 1) == 0 || strncmp(&input[i], "\'", 1) == 0) {
-			// read the following values until another quote found
-			// and add the string between first and next quote to the buffer
-			// set i = next index a quote is found + 1 to parse next token
-	
 			// adds the current word stored into the buffer before processing next token
-			addCurWord(cur_word, buf);
+			add_cur_word(cur_word, buf);
+			cur_word = "";
+
+			// read following values till closing quote is found; progress counter i
+			// to index following the closing quote
 			i = quoted_token(input, buf, input[i], i);
 		}
 
 		// if current char is a special symbol
 		// save current value as token & save current char as token in buffer
 		else if (contains(special_symbols, input[i]) == 1) {
-			addCurWord(cur_word, buf);
+			add_cur_word(cur_word, buf);
+			cur_word = "";
 
 			// add special symbol as a token
-			addCurWord(&input[i], buf);
+			add_cur_word(&input[i], buf);
 			i++;
 		}
 		
@@ -76,7 +77,7 @@ vect_t* tokenize(char* input, int max_tokens) {
 		// save current value as token and proceed to next char
 		// if no value is being built, simply proceed to next char
 		else if (contains(white_spaces, input[i]) == 1) {
-                        addCurWord(cur_word, buf);
+                        add_cur_word(cur_word, buf);
 			cur_word = "";
 			i++;
 		}	
@@ -90,14 +91,13 @@ vect_t* tokenize(char* input, int max_tokens) {
 	}
 
 	// empty the current word in to buffer
-	addCurWord(cur_word, buf);
-
+	add_cur_word(cur_word, buf);
 	free(cur_word);
 	return buf;
 }
 
-
-// main driver for tokenizer function
+// Main driver for tokenizer: tokenize given string, then print all tokens up to 
+// max number of tokens allowed.
 int main(int argc, char **argv) {
 	// transform **argv into array of chars
 	char expr[MAX_STRLEN];
@@ -110,6 +110,7 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < vect_size(tokens); i++) {
 		printf("%s\n", vect_get_copy(tokens, i));
 	}
+	free(tokens);
 
 	return 0;
 }
