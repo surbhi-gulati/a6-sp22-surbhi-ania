@@ -49,7 +49,7 @@ vect_t* tokenize(char* input, int max_tokens) {
 
 	// iterate through string and collect and add tokens to buffer
 	int i = 0; // current position in string
-	while (input[i] != '\0' && i < max_tokens) { // while the end of string is not reached
+	while (i < max_tokens && input[i] != '\0') { // while the end of string is not reached
 
 		// first check if the current char is a quote
 	  	if (strncmp(&input[i], "\"", 1) == 0) {
@@ -83,6 +83,19 @@ vect_t* tokenize(char* input, int max_tokens) {
 			memset(cur_word, '\0', max_tokens);
 			i++;
 		}	
+
+		// if encounter a tab sequence '\t'
+		// save current value as token and proceed to next char
+		// if no value is being built, simply proceed to next char
+		else if (strncmp(&input[i], "\\", 1) == 0
+				&& (i + 1) < max_tokens
+				&& input[i + 1] != '\0'
+				&& strncmp(&input[i + 1], "t", 1) == 0) {
+                        	add_cur_word(cur_word, buf);
+                        	memset(cur_word, '\0', max_tokens);
+                        	i = i + 2;
+                }
+		
 
 		// if encountering no special symbol or whitespace, value belongs to new word
 		// create vector to build a word as part of a new token
