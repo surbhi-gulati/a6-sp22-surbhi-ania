@@ -9,7 +9,7 @@
 #include "shell.h"
 
 /* Launch given child process if possible, or print error message. */
-static int launch_child(char* child) {
+static int launch_child(char** child) {
 	if (fork() == 0) {
 		execve(child[0], child, NULL);
 		exit(1);
@@ -20,39 +20,43 @@ static int launch_child(char* child) {
 	return 0;	
 }
 
-/* Prompt user for command and retrieve their input in to cmd. */
-void get_command(char* cmd) {
-	memset(cmd, '\0', MAX_CMDLEN);
-	printf("shell $");
-
-	const size_t cmd_max_size = MAX_CMDLEN;	
-	getline(&cmd, &cmd_max_size, stdin);
-}
-
 /* Check if we should exit shell (1 = True, 0 = False). */
 int is_exit_cmd(char* cmd) {
-	if (strcmp(&cmd, "exit\n") == 0) {
+	if (strcmp(cmd, "exit") == 0) {
 		return 1;
 	}
 	return 0;
 }
 
+char* vect_to_str(vect_t* vect) {
+	char result[vect_size(vect)];
+	for (int i = 0; i < vect_size(vect); i++) {
+		result[i] = *vect_get_copy(vect, i);
+	}
+	char* res = result;
+	return res;
+}
+
 /* Driver for mini shell program. */
 int main(int argc, char **argv) {
 
-	// welcome user and kick off requested child processes	
-	printf("Welcome to mini-shell.\n"); // welcome message 
-	char *cmd = malloc(MAX_CMDLEN * sizeof(char)); // allocate cmd space
-	get_command(cmd); // get first shell cmd
+	// welcome user and kick off requested child processes
+	printf("Welcome to mini-shell.\n"); // welcome message
 
-	// parse and execute commands until command = 'exit' or 'ctrl+d'
-	while (is_exit_cmd(cmd) != 1) {
-		launch_child(tokenize(cmd)); // tokenize + launch this cmd
-		get_command(cmd); // get next cmd
+	while(1) {
+		printf("shell$ ");
+		char cmd[MAX_CMDLEN];
+		fgets(cmd, MAX_CMDLEN, stdin); // copy given string argument in to expr
+		cmd[strcspn(cmd, "\n")] = 0;
+
+		vect_t *command = tokenize(cmd);
+		char* cmd_array = vect_to_str(command);
+
+		if (is_exit_cmd(cmd_array[0]) == 1) {
+			printf("Bye bye.\n");
+			return 0;
+		} else {
+			launch_child(cmd_array);
+		}
 	}
-	
-	// free cmd memory & exit with bye message
-	free(cmd);
-	printf("Bye bye.\n");
-	return 0;
 }
