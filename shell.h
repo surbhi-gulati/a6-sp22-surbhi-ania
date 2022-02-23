@@ -3,6 +3,6 @@
 
 #include "tokenize.h"
 
-#define MAX_COMLEN 300 /* Can be anything 255+ */
+#define MAX_CMDLEN 300 /* Can be anything 255+ */
 
 #endif /* ifndef _SHELL_H */
