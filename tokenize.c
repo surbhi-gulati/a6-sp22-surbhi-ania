@@ -126,7 +126,9 @@ int main(int argc, char *argv[]) {
 		
 	// print all of the tokens in vect_t
 	for (int i = 0; i < vect_size(tokens); i++) {
-		printf("%s\n", vect_get_copy(tokens, i));
+		char *token = vect_get_copy(tokens, i);
+		printf("%s\n", token);
+		free(token);
 	}
 	vect_delete(tokens);
 
