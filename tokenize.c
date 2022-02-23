@@ -19,6 +19,10 @@ static int quoted_token(char* input, vect_t* buf, int fst_idx) {
         char quote[MAX_STRLEN] = "\0";
         int i = fst_idx + 1;
         while (strncmp(&input[i], "\"", 1) != 0) {
+		// error out if the quote does not end
+		if (strncmp(&input[i], "\0", 1) == 0) {
+			exit(1);
+		}
                 strncat(quote, &input[i], sizeof(input[i]));
 		i++;
         }
@@ -27,35 +31,32 @@ static int quoted_token(char* input, vect_t* buf, int fst_idx) {
         return i + 1;
 }
 
-// Checks if an input string is a member of the passed string array.
-// Returns 1 if true, 0 if false.
-static int contains(const char* array, char element) {
-        for (int i = 0; i < (sizeof(array) / sizeof(*array)) - 1; i++) {
-                if (strncmp(&array[i], &element, 1) == 0) {
+// Checks if given char is a special symbol (1 = true, 0 = false);
+static int is_special(char element) {
+	const char special_symbols[] = {'(', ')', '<', '>', ';', '|'};  // get own tokens if not quoted
+        for (int i = 0; i < (sizeof(special_symbols) / sizeof(*special_symbols)); i++) {
+                if (strncmp(&special_symbols[i], &element, 1) == 0) {
                         return 1;
                 }
         }
         return 0;
 }
 
-// Returns a vector of the tokens in the given input, capping tokenization at the maximum number
-// of characters to read that is provided..
-vect_t* tokenize(char* input, int max_tokens) {
+// Returns a vector of the tokens in the given input string.
+vect_t* tokenize(char* input) {
 
 	vect_t *buf = vect_new(); // stores all tokens
 	char cur_word[MAX_STRLEN] = "\0"; // stores current word being built
 
-	const char special_symbols[] = {'(', ')', '<', '>', ';', '|'};  // get own tokens if not quoted
-
 	// iterate through string and collect and add tokens to buffer
 	int i = 0; // current position in string
-	while (i < max_tokens && input[i] != '\0') { // while the end of string is not reached
+	while (i < MAX_STRLEN && input[i] != '\0') { // while the end of string is not reached
 
 		// first check if the current char is a quote
 	  	if (strncmp(&input[i], "\"", 1) == 0) {
 			// adds the current word stored into the buffer before processing next token
 			add_cur_word(cur_word, buf);
-			memset(cur_word, '\0', max_tokens);
+			memset(cur_word, '\0', MAX_STRLEN);
 
 			// read following values till closing quote is found; progress counter i
 			// to index following the closing quote
@@ -64,14 +65,15 @@ vect_t* tokenize(char* input, int max_tokens) {
 
 		// if current char is a special symbol
 		// save current value as token & save current char as token in buffer
-		else if (contains(special_symbols, input[i]) == 1) {
+		else if (is_special(input[i]) == 1) {
+			// adds the current word stored into the buffer before processing next token
 			add_cur_word(cur_word, buf);
-			memset(cur_word, '\0', max_tokens);
+			memset(cur_word, '\0', MAX_STRLEN);
 
 			// add special symbol as a token
 			strncat(cur_word, &input[i], sizeof(input[i]));
 			add_cur_word(cur_word, buf);
-			memset(cur_word, '\0', max_tokens);
+			memset(cur_word, '\0', MAX_STRLEN);
 			i++;
 		}
 		
@@ -80,7 +82,7 @@ vect_t* tokenize(char* input, int max_tokens) {
 		// if no value is being built, simply proceed to next char
 		else if (strncmp(&input[i], " ", 1) == 0) {
                         add_cur_word(cur_word, buf);
-			memset(cur_word, '\0', max_tokens);
+			memset(cur_word, '\0', MAX_STRLEN);
 			i++;
 		}	
 
@@ -88,11 +90,11 @@ vect_t* tokenize(char* input, int max_tokens) {
 		// save current value as token and proceed to next char
 		// if no value is being built, simply proceed to next char
 		else if (strncmp(&input[i], "\\", 1) == 0
-				&& (i + 1) < max_tokens
+				&& (i + 1) < MAX_STRLEN
 				&& input[i + 1] != '\0'
 				&& strncmp(&input[i + 1], "t", 1) == 0) {
                         	add_cur_word(cur_word, buf);
-                        	memset(cur_word, '\0', max_tokens);
+                        	memset(cur_word, '\0', MAX_STRLEN);
                         	i = i + 2;
                 }
 		
@@ -120,7 +122,7 @@ int main(int argc, char *argv[]) {
 	expr[strcspn(expr, "\n")] = 0;
 	
 	// call tokenize to create a vector of tokens
-	vect_t *tokens = tokenize(expr, MAX_STRLEN);
+	vect_t *tokens = tokenize(expr);
 		
 	// print all of the tokens in vect_t
 	for (int i = 0; i < vect_size(tokens); i++) {
