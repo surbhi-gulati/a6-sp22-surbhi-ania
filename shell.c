@@ -22,6 +22,20 @@ static void launch_child(char** child) {
 	// return 0;	
 }
 
+/* Prepend '/bin/' to command if not present so that system can find and 
+execute the given command. */
+static char** sys_command(char** cmd) {
+        if (strncmp(cmd[0], "/bin/", 5) != 0) {
+                char *bin_append = calloc(MAX_CMDLEN, sizeof(char));
+                memcpy(bin_append, "/bin/", 5);
+
+                strncat(bin_append, cmd[0], strlen(cmd[0]));
+                cmd[0] = bin_append;
+                free(bin_append);
+        }
+        return cmd;
+}
+
 /* Convert the given vector to a string and return a pointer to it. */
 static char** vect_to_str(vect_t* vect) {
 	char* result[vect_size(vect) + 1];
@@ -30,7 +44,7 @@ static char** vect_to_str(vect_t* vect) {
 	}
 	result[vect_size(vect)] = NULL;
 	char **res = result;
-	return res;
+	return sys_command(res);
 }
 
 /* Driver for mini shell program. */
@@ -47,13 +61,14 @@ int main(int argc, char **argv) {
 		char cmd[MAX_CMDLEN];
 		char* flag = fgets(cmd, MAX_CMDLEN, stdin); // copy given string argument into expr
 		
-		// ctrl + D
+		// ctrl + D command: exit shell
 		if (flag == NULL) {
 			printf("\n");
 			break;
 		}
-		cmd[strcspn(cmd, "\n")] = 0;
 
+		// tokenize and put command args in to a string array
+		cmd[strcspn(cmd, "\n")] = 0;
 		vect_t *command = tokenize(cmd);
 		char* cmd_array[vect_size(command) + 1];
 		for (int i = 0; i < vect_size(command); i++) {
@@ -61,17 +76,17 @@ int main(int argc, char **argv) {
         	}
         	cmd_array[vect_size(command)] = NULL;
 
-		// exit
+		// exit command: exit shell
 		if (strcmp(cmd_array[0], "exit") == 0) {
 			break;
 		} 
-		// process cmd
+
+		// process cmd if it is not an exit command
 		else {
 			if (fork() == 0) {
          			if (execvp(cmd_array[0], cmd_array) < 0) {
                        			printf("No such file or directory\n");
                 		}
-                		exit(1);
         		}
         		else {  
                			wait(NULL);
