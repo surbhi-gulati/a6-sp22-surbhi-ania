@@ -11,7 +11,7 @@
 /* Launch given child process if possible, or print error message. */
 static int launch_child(char** child) {
 	if (fork() == 0) {
-		execve(child[0], child, NULL);
+		execve(child[0], &child[0], NULL);
 		exit(1);
 	}
 	else {
@@ -20,20 +20,12 @@ static int launch_child(char** child) {
 	return 0;	
 }
 
-/* Check if we should exit shell (1 = True, 0 = False). */
-int is_exit_cmd(char* cmd) {
-	if (strcmp(cmd, "exit") == 0) {
-		return 1;
-	}
-	return 0;
-}
-
-char* vect_to_str(vect_t* vect) {
-	char result[vect_size(vect)];
+char** vect_to_str(vect_t* vect) {
+	char* result[vect_size(vect)];
 	for (int i = 0; i < vect_size(vect); i++) {
-		result[i] = *vect_get_copy(vect, i);
+		result[i] = vect_get_copy(vect, i);
 	}
-	char* res = result;
+	char **res = result;
 	return res;
 }
 
@@ -46,17 +38,20 @@ int main(int argc, char **argv) {
 	while(1) {
 		printf("shell$ ");
 		char cmd[MAX_CMDLEN];
-		fgets(cmd, MAX_CMDLEN, stdin); // copy given string argument in to expr
+		fgets(cmd, MAX_CMDLEN, stdin); // copy given string argument into expr
+		if (cmd == NULL) {
+			break;
+		}
 		cmd[strcspn(cmd, "\n")] = 0;
 
 		vect_t *command = tokenize(cmd);
-		char* cmd_array = vect_to_str(command);
+		char** cmd_array = vect_to_str(command);
 
-		if (is_exit_cmd(cmd_array[0]) == 1) {
-			printf("Bye bye.\n");
-			return 0;
+		if (strcmp(cmd_array[0], "exit") == 1) {
+			break;
 		} else {
 			launch_child(cmd_array);
+			memset(cmd_array, '\0', MAX_CMDLEN);
 		}
 	}
 }
