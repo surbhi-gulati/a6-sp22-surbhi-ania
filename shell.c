@@ -55,7 +55,11 @@ int main(int argc, char **argv) {
 		cmd[strcspn(cmd, "\n")] = 0;
 
 		vect_t *command = tokenize(cmd);
-		char** cmd_array = vect_to_str(command);
+		char* cmd_array[vect_size(command) + 1];
+		for (int i = 0; i < vect_size(command); i++) {
+                	cmd_array[i] = vect_get_copy(command, i);
+        	}
+        	cmd_array[vect_size(command)] = NULL;
 
 		// exit
 		if (strcmp(cmd_array[0], "exit") == 0) {
