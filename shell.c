@@ -8,44 +8,6 @@
 
 #include "shell.h"
 
-/* Launch given child process if possible, or print error message. */
-static void launch_child(char** child) {
-	if (fork() == 0) {
-		if (execvp(child[0], child) < 0) {
-			printf("No such file or directory\n");
-		}
-		exit(1);
-	}
-	else {
-		wait(NULL);
-	}
-	// return 0;	
-}
-
-/* Prepend '/bin/' to command if not present so that system can find and 
-execute the given command. */
-static char** sys_command(char** cmd) {
-        if (strncmp(cmd[0], "/bin/", 5) != 0) {
-                char *bin_append = calloc(MAX_CMDLEN, sizeof(char));
-                memcpy(bin_append, "/bin/", 5);
-
-                strncat(bin_append, cmd[0], strlen(cmd[0]));
-                cmd[0] = bin_append;
-                free(bin_append);
-        }
-        return cmd;
-}
-
-/* Convert the given vector to a string and return a pointer to it. */
-static char** vect_to_str(vect_t* vect) {
-	char* result[vect_size(vect) + 1];
-	for (int i = 0; i < vect_size(vect); i++) {
-		result[i] = vect_get_copy(vect, i);
-	}
-	result[vect_size(vect)] = NULL;
-	char **res = result;
-	return sys_command(res);
-}
 
 /* Driver for mini shell program. */
 int main(int argc, char **argv) {
