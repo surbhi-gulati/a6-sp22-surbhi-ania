@@ -63,7 +63,15 @@ int main(int argc, char **argv) {
 		} 
 		// process cmd
 		else {
-			launch_child(cmd_array);
+			if (fork() == 0) {
+         			if (execvp(cmd_array[0], cmd_array) < 0) {
+                       			printf("No such file or directory\n");
+                		}
+                		exit(1);
+        		}
+        		else {  
+               			wait(NULL);
+        		}
 		}
 	}
 
