@@ -22,6 +22,20 @@ static void launch_child(char** child) {
 	// return 0;	
 }
 
+/* Prepend '/bin/' to command if not present so that system can find and 
+execute the given command. */
+static char** sys_command(char** cmd) {
+        if (strncmp(cmd[0], "/bin/", 5) != 0) {
+                char *bin_append = calloc(MAX_CMDLEN, sizeof(char));
+                memcpy(bin_append, "/bin/", 5);
+
+                strncat(bin_append, cmd[0], strlen(cmd[0]));
+                cmd[0] = bin_append;
+                free(bin_append);
+        }
+        return cmd;
+}
+
 /* Convert the given vector to a string and return a pointer to it. */
 static char** vect_to_str(vect_t* vect) {
 	char* result[vect_size(vect) + 1];
@@ -30,7 +44,7 @@ static char** vect_to_str(vect_t* vect) {
 	}
 	result[vect_size(vect)] = NULL;
 	char **res = result;
-	return res;
+	return sys_command(res);
 }
 
 /* Driver for mini shell program. */
