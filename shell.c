@@ -11,7 +11,9 @@
 /* Launch given child process if possible, or print error message. */
 static int launch_child(char** child) {
 	if (fork() == 0) {
-		execve(child[0], &child[0], NULL);
+		if(execvp(child[0], child) < 0) {
+			printf("No such file or directory\n");
+		}
 		exit(1);
 	}
 	else {
@@ -54,4 +56,6 @@ int main(int argc, char **argv) {
 			memset(cmd_array, '\0', MAX_CMDLEN);
 		}
 	}
+	printf("Bye bye.");
+	return 0;
 }
