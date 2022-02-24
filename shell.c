@@ -23,10 +23,11 @@ static int launch_child(char** child) {
 }
 
 char** vect_to_str(vect_t* vect) {
-	char* result[vect_size(vect)];
+	char* result[vect_size(vect) + 1];
 	for (int i = 0; i < vect_size(vect); i++) {
 		result[i] = vect_get_copy(vect, i);
 	}
+	result[vect_size(vect)] = "\0";
 	char **res = result;
 	return res;
 }
@@ -40,8 +41,8 @@ int main(int argc, char **argv) {
 	while(1) {
 		printf("shell$ ");
 		char cmd[MAX_CMDLEN];
-		fgets(cmd, MAX_CMDLEN, stdin); // copy given string argument into expr
-		if (cmd == NULL) {
+		char* flag = fgets(cmd, MAX_CMDLEN, stdin); // copy given string argument into expr
+		if (flag == NULL) {
 			break;
 		}
 		cmd[strcspn(cmd, "\n")] = 0;
@@ -49,13 +50,13 @@ int main(int argc, char **argv) {
 		vect_t *command = tokenize(cmd);
 		char** cmd_array = vect_to_str(command);
 
-		if (strcmp(cmd_array[0], "exit") == 1) {
+		if (strcmp(cmd_array[0], "exit") == 0) {
 			break;
 		} else {
 			launch_child(cmd_array);
 			memset(cmd_array, '\0', MAX_CMDLEN);
 		}
 	}
-	printf("Bye bye.");
+	printf("Bye bye.\n");
 	return 0;
 }
