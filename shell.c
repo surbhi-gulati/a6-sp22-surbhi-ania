@@ -28,7 +28,7 @@ static char** vect_to_str(vect_t* vect) {
 	for (int i = 0; i < vect_size(vect); i++) {
 		result[i] = vect_get_copy(vect, i);
 	}
-	result[vect_size(vect)] = '\0';
+	result[vect_size(vect)] = NULL;
 	char **res = result;
 	return res;
 }
