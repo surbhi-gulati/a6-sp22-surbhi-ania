@@ -11,7 +11,7 @@
 /* Launch given child process if possible, or print error message. */
 static void launch_child(char** child) {
 	if (fork() == 0) {
-		if(execvp(child[0], child) < 0) {
+		if (execvp(child[0], child) < 0) {
 			printf("No such file or directory\n");
 		}
 		exit(1);
@@ -26,7 +26,7 @@ static void launch_child(char** child) {
 static char** vect_to_str(vect_t* vect) {
 	char* result[vect_size(vect) + 1];
 	for (int i = 0; i < vect_size(vect); i++) {
-		str_rep[i] = vect_get_copy(vect, i);
+		result[i] = vect_get_copy(vect, i);
 	}
 	result[vect_size(vect)] = '\0';
 	char **res = result;
