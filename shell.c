@@ -64,7 +64,6 @@ int main(int argc, char **argv) {
 		// process cmd
 		else {
 			launch_child(cmd_array);
-			memset(cmd_array, '\0', MAX_CMDLEN);
 		}
 	}
 
