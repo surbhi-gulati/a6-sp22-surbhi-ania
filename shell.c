@@ -51,6 +51,11 @@ int main(int argc, char **argv) {
 
 		// exit command: exit shell
 		if (strcmp(cmd_array[0], "exit") == 0) {
+			// freeing all data before exiting
+			for (int i = 0; i < vect_size(command); i++) {
+                        free(cmd_array[i]);
+               		}
+			vect_delete(command);
 			break;
 		} 
 
@@ -58,6 +63,12 @@ int main(int argc, char **argv) {
 		else {
 			exec_child(cmd_array);
 		}
+
+		// freeing data that was allocated during this iteration of loop
+		for (int i = 0; i < vect_size(command); i++) {
+                        free(cmd_array[i]);
+		}
+		vect_delete(command);
 	}
 
 	// exit message
