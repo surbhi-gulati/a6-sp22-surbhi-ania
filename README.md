@@ -1,4 +1,4 @@
-# Assignment 6: Shell, pt. 1
+# Assignment 6: Shell, pt. 2
 
 This is the starter code for [Assignment 5](https://course.ccs.neu.edu/cs3650sp22/a05.html) which this code extends.
 
