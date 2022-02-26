@@ -8,18 +8,6 @@
 
 #include "shell.h"
 
-/* Process given child program on foreground. */
-static void exec_child(char** cmd_array) {
-	if (fork() == 0) {
-                if (execvp(cmd_array[0], cmd_array) < 0) {
-			printf("No such file or directory\n");
-        	}
-        }
-	else {
-		wait(NULL);
-        }
-}
-
 /* Driver for mini shell program. */
 int main(int argc, char **argv) {
 
