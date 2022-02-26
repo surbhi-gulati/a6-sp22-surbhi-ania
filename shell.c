@@ -14,52 +14,12 @@ int main(int argc, char **argv) {
 	// welcome user and kick off requested child processes
 	printf("Welcome to mini-shell.\n"); // welcome message
 
-	// get cmd's continuously until exit via ctrl+D or exit cmd
+	// get commands continuously until exit via ctrl+D or exit cmd
 	while (1) {
-
-		// get next cmd
 		printf("shell $ ");
-		char cmd[MAX_CMDLEN];
-		char* flag = fgets(cmd, MAX_CMDLEN, stdin); // copy given string argument into expr
-		
-		// ctrl + D command: exit shell
-		if (flag == NULL) {
-			printf("\n");
-			break;
-		}
-
-		// tokenize and put command args in to a string array
-		cmd[strcspn(cmd, "\n")] = 0;
-		vect_t *command = tokenize(cmd);
-		char* cmd_array[vect_size(command) + 1];
-		for (int i = 0; i < vect_size(command); i++) {
-                	cmd_array[i] = vect_get_copy(command, i);
-        	}
-        	cmd_array[vect_size(command)] = NULL;
-
-		// exit command: exit shell
-		if (strcmp(cmd_array[0], "exit") == 0) {
-			// freeing all data before exiting
-			for (int i = 0; i < vect_size(command); i++) {
-                        free(cmd_array[i]);
-               		}
-			vect_delete(command);
-			break;
-		} 
-
-		// process cmd if it is not an exit command
-		else {
-			exec_child(cmd_array);
-		}
-
-		// freeing data that was allocated during this iteration of loop
-		for (int i = 0; i < vect_size(command); i++) {
-                        free(cmd_array[i]);
-		}
-		vect_delete(command);
+		char command[MAX_CMDLEN];
+		char* input = fgets(command, MAX_CMDLEN, stdin);
+		build_cmd(input);
 	}
 
-	// exit message
-	printf("Bye bye.\n");
-	return 0;
 }

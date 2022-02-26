@@ -31,27 +31,54 @@ static void builtin_help(char* cmd, char* documentation) {
 	printf("'%b':\t%s", cmd, documentation);
 }
 
+/* Tokenize and put STDIN command arguments in to a string array. */
+static char* build_cmd(char input) {
+	input[strcpsn(input, "\n")] = 0;
+	vect_t* cmd_vect = tokenize(input);
+	char* command[vect_size(cmd_vect) + 1];
+	for (int i = 0; i < vect_size(cmd_vect); i++) {
+		command[i] = vect_get_copy(cmd_vect, i);
+	}
+	command[vect_size(cmd_vect)] = NULL;
+	vect_delete(cmd_vect);
+	return command;
+}
 
-/* Check whether the command is a built-in command, if it is then complete custom execution. 
-   Otherwise tokenize and execute the child process. */
-static void built_in_proc(char* cmd, char* prev_cmd) {
+/* Clear memory consumed by current and previous commands and exit program. */
+static void quit_shell(int cmd_args, char* cmd, int prev_args, char* prev_cmd) {
+	for (int i = 0; i < cmd_args; i++) {
+		free(cmd[i]);
+	}
+	for (int i = 0; i < prev_args; i++) {
+		free(prev_cmd[i]);
+	}
+	exit(0);
+}
 
-	// commmand length for validating inputs before attempting execution
-	int cmd_len = sizeof(cmd) / sizeof(*cmd);
+/* Check whether the tokenized command array is a built-in command, 
+ * if it is then complete custom execution. 
+ * Otherwise tokenize and execute the child process. */
+static void builtin_proc(int cmd_args, char* cmd, int prev_args, char* prev_cmd) {
 
-        // if ctrl+d or exit requested: quit shell
-	if (strcmp(cmd[0], NULL) == 0 || strcmp(cmd[1], "exit") == 0) {
+        // if ctrl+d requested: go to next line & quit shell
+	if (strcmp(cmd[0], NULL) == 0) {
+		printf("\nBye bye.\n");
+		quit_shell(cmd_args, cmd, prev_args, prev_cmd);
+	}
+
+	// if ctrl+d requested: quit shell
+	else if (strcmp(cmd[1], "exit") == 0) {
 		printf("Bye bye.\n");
-		exit(0); // TODO: ensure this doesn't cause mem leaks
+		quit_shell(cmd_args, cmd, prev_args, prev_cmd);
 	}
 
 	// if prev requested: print + execute previous command
 	else if (strcmp(cmd[0], "prev") == 0) {
-		if (cmd_len != 1) {
+		if (cmd_args != 1) {
 			builtin_malformed("prev", 1);
 		}
 		else {				
-			exec_child(tokenize_cmd(prev_cmd));
+			exec_child(prev_cmd);
 		}
 	}
 
@@ -66,7 +93,7 @@ static void built_in_proc(char* cmd, char* prev_cmd) {
 
 	// if cd requested: change current working directory of shell
 	else if (strcmp(cmd[0], "cd") == 0) {
-		if (cmd_len != 2) {
+		if (cmd_args != 2) {
 			builtin_malformed("cd", 2);
 		}
 		else {
@@ -76,7 +103,7 @@ static void built_in_proc(char* cmd, char* prev_cmd) {
 
 	// if source requested: get filename and execute commands line by line
 	else if (strncmp(cmd[0], "source", 6) == 0) {
-		if (cmd_len != 2) {
+		if (cmd_args != 2) {
 			builtin_malformed("source", 2);
 		}
 		else {
@@ -85,7 +112,7 @@ static void built_in_proc(char* cmd, char* prev_cmd) {
 	}
 
 	else {
-		// exec_child(cmd);
+		exec_child(cmd);
 	}
 
 }
