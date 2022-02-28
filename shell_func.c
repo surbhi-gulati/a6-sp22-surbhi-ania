@@ -31,7 +31,8 @@ static void exec_child(char** cmd, char** prev_cmd, char* input, char* prev_inpu
 
 /* Help message for malformed built-in commands. */
 static void builtin_malformed(char* cmd, int expt_args) {
-	printf("Malformed input. Command: \'%s\' expected %d arguments.\nEnter \'help\' to view documentation.", cmd, expt_args);
+	printf("Malformed input. Command: \'%s\' expected %d arguments.\n", cmd, expt_args);
+	printf("Enter \'help\' to view documentation.\n");
 } 
 
 /* Style help documentation: bold command and provide plaintext additional information. */
@@ -57,6 +58,8 @@ static void quit_shell(char** command, char** prev_command) {
 		free(command[i]);
 		free(prev_command[i]);
 	}	
+	free(command);
+	free(prev_command);
 	printf("REACHED QUIT SHELL\n");
 	exit(0);
 }
@@ -134,8 +137,7 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 			FILE* source_read = fopen(cmd[1], "r");
 			// read lines from sourcefile and execute one by one until EOF
 			while (fgets(line, sizeof(line), source_read) != NULL) {
-				char new_cmd[MAX_STRLEN];
-				build_cmd(new_cmd, cmd);
+				build_cmd(line, cmd);
 				exec_proc(cmd, prev_cmd, input, prev_input);
 			}
 			fclose(source_read);
