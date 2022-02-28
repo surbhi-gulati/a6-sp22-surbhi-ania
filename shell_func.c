@@ -8,6 +8,15 @@
 
 #include "shell.h"
 
+/* Count number of arguments in the given command array. */
+static int cmd_arguments(char** cmd) {
+        int args = 0;
+        while (cmd[args] != NULL) {
+                args++;
+        }
+        return args;
+}
+
 /* Update prev_cmd to contain the contents of the current command. */
 static void update_prev(char** cmd, char** prev_cmd, char* input, char* prev_input) {
         for (int i = 0; i < MAX_CMDLEN; i++) {
@@ -68,30 +77,23 @@ static void quit_shell(char** command, char** prev_command) {
  * (ie. dir_given = 0) then change to home directory.  */
 static void change_dir(char** cmd, int dir_given) {
 	int newDir = -1;
+	int cmd_args = cmd_arguments(cmd);
+	char* dir = (char *) malloc(MAX_CMDLEN * sizeof(char));
 	// change to home directory
-	if (dir_given == 0) {
-		newDir = chdir("~");
+	if (cmd_args == 1) {
+		strncpy(dir, "..", strlen(".."));
 	}
 	// change to given directory
 	else {
-        	char* dir = (char *) malloc(MAX_CMDLEN * sizeof(char));
         	strncpy(dir, cmd[1], strlen(cmd[1]));
-        	newDir = chdir(dir);
-        	free(dir);
 	}
+	newDir = chdir(dir);
+        free(dir);
         if (newDir < 0) {
                 printf("Error occurred while changing directory.\n");
         }
 }
 
-/* Count number of arguments in the given command array. */
-static int cmd_arguments(char** cmd) {
-	int args = 0;
-	while (cmd[args] != NULL) {
-		args++;
-	}
-	return args;
-}
 
 /* Check whether the tokenized command array is a built-in command, 
  * if it is then complete custom execution. 
