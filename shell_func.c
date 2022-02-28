@@ -50,11 +50,12 @@ static void build_cmd(char* input, char** command) {
 }
 
 /* Clear memory consumed by current and previous commands and exit program. */
-static void quit_shell(char** cmd, char** prev_cmd) {
+static void quit_shell(char** command, char** prev_command) {
 	for (int i = 0; i < MAX_CMDLEN; i++) {
-		free(cmd[i]);
-		free(prev_cmd[i]);
-	}
+		free(command[i]);
+		free(prev_command[i]);
+	}	
+	printf("REACHED QUIT SHELL\n");
 	exit(0);
 }
 

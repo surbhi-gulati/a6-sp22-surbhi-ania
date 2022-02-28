@@ -25,11 +25,24 @@ int main(int argc, char **argv) {
 		printf("shell $ ");
 		char* flag = fgets(input, MAX_CMDLEN, stdin);
 
+		// exit if ctrl+D
 		if (flag == NULL) {
 			printf("\nBye bye.\n");
+			quit_shell(command, prev_command);
 			break;
 		}
+
+		// build command for execution
 		build_cmd(input, command);
+		
+		// exit if command prompts exit
+		if (strcmp(command[0], "exit") == 0) {
+			printf("Bye bye.\n");
+			quit_shell(command, prev_command);
+			break;
+		}
+
+		// execute given command
 		exec_proc(command, prev_command);
 	}
 	
