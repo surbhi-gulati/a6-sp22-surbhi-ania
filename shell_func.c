@@ -22,18 +22,17 @@ static void exec_child(char** cmd_array) {
 
 /* Help message for malformed built-in commands. */
 static void builtin_malformed(char* cmd, int expt_args) {
-	printf("Malformed input. Command: '%s' expected %d arguments.
-			\nEnter 'help' to view documentation.", cmd, expt_args);
+	printf("Malformed input. Command: \'%s\' expected %d arguments.\nEnter \'help\' to view documentation.", cmd, expt_args);
 } 
 
 /* Style help documentation: bold command and provide plaintext additional information. */
 static void builtin_help(char* cmd, char* documentation) {
-	printf("'%b':\t%s", cmd, documentation);
+	printf("\'%s\':\t%s", cmd, documentation);
 }
 
-/* Tokenize and put STDIN command arguments in to a string array. */
-static char* build_cmd(char input) {
-	input[strcpsn(input, "\n")] = 0;
+/* Tokenize and put STDIN command arguments in to command string array. */
+static void build_cmd(char* input) {
+	input[strcspn(input, "\n")] = 0;
 	vect_t* cmd_vect = tokenize(input);
 	char* command[vect_size(cmd_vect) + 1];
 	for (int i = 0; i < vect_size(cmd_vect); i++) {
@@ -41,11 +40,10 @@ static char* build_cmd(char input) {
 	}
 	command[vect_size(cmd_vect)] = NULL;
 	vect_delete(cmd_vect);
-	return command;
 }
 
 /* Clear memory consumed by current and previous commands and exit program. */
-static void quit_shell(int cmd_args, char* cmd, int prev_args, char* prev_cmd) {
+static void quit_shell(int cmd_args, char** cmd, int prev_args, char** prev_cmd) {
 	for (int i = 0; i < cmd_args; i++) {
 		free(cmd[i]);
 	}
@@ -61,9 +59,9 @@ static void update_prev() {
 }
 
 /* Changes the current working directory of the shell  */
-static void change_dir(char* cmd) {
+static void change_dir(char** cmd) {
         char* dir = (char *) malloc(MAX_CMDLEN * sizeof(char));
-        dir = strncpy(dir, cmd[1], strlen(cmd[1]));
+        strncpy(dir, cmd[1], strlen(cmd[1]));
 
         // change directory
         int newDir = chdir(dir);
@@ -76,10 +74,10 @@ static void change_dir(char* cmd) {
 /* Check whether the tokenized command array is a built-in command, 
  * if it is then complete custom execution. 
  * Otherwise tokenize and execute the child process. */
-static void exec_proc(int cmd_args, char* cmd, int prev_args, char* prev_cmd) {
+static void exec_proc(int cmd_args, char** cmd, int prev_args, char** prev_cmd) {
 
         // if ctrl+d requested: go to next line & quit shell
-	if (strcmp(cmd[0], NULL) == 0) {
+	if (cmd[0] == NULL) {
 		printf("\nBye bye.\n");
 		quit_shell(cmd_args, cmd, prev_args, prev_cmd);
 	}
@@ -101,7 +99,7 @@ static void exec_proc(int cmd_args, char* cmd, int prev_args, char* prev_cmd) {
 	}
 
 	// if help requested: print help info        	
-	else if (strcmp(cmd, "help")) {
+	else if (strcmp(cmd[0], "help") == 0) {
 		builtin_help("exit / ctrl+d", "quit shell");
 		builtin_help("cd", "change directory");
 		builtin_help("source", "execute commands in file, line by line");
@@ -126,11 +124,12 @@ static void exec_proc(int cmd_args, char* cmd, int prev_args, char* prev_cmd) {
 		}
 		else {
 			char line[MAX_STRLEN];
-			FILE* source_read = fopen(source, "r");
+			FILE* source_read = fopen(cmd[1], "r");
 			while (fgets(line, sizeof(line), source_read)) {
 				// save cmd, prev -> exec until cmd = eof
-				char* new_cmd = build_cmd(line);
-				exec_proc(sizeof(line), new_cmd);
+				// char* new_cmd = build_cmd(line);
+				// exec_proc(sizeof(line), new_cmd);
+				printf("THIS IS A TODO");
 			}
 			fclose(source_read);
 		}
