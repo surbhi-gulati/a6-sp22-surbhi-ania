@@ -8,15 +8,23 @@
 
 #include "shell.h"
 
+/* Update prev_cmd to contain the contents of the current command. */
+static void update_prev(char** cmd, char** prev_cmd) {
+        for (int i = 0; i < MAX_CMDLEN; i++) {
+                prev_cmd[i] = cmd[i];
+        }
+}
+
 /* Process given child program on foreground. */
-static void exec_child(char** cmd_array) {
+static void exec_child(char** cmd, char** prev_cmd) {
 	if (fork() == 0) {
-                if (execvp(cmd_array[0], cmd_array) < 0) {
+                if (execvp(cmd[0], cmd) < 0) {
 			printf("No such file or directory\n");
         	}
         }
 	else {
 		wait(NULL);
+		update_prev(cmd, prev_cmd);
         }
 }
 
@@ -31,10 +39,9 @@ static void builtin_help(char* cmd, char* documentation) {
 }
 
 /* Tokenize and put STDIN command arguments in to command string array. */
-static void build_cmd(char* input) {
+static void build_cmd(char* input, char** command) {
 	input[strcspn(input, "\n")] = 0;
 	vect_t* cmd_vect = tokenize(input);
-	char* command[vect_size(cmd_vect) + 1];
 	for (int i = 0; i < vect_size(cmd_vect); i++) {
 		command[i] = vect_get_copy(cmd_vect, i);
 	}
@@ -43,19 +50,12 @@ static void build_cmd(char* input) {
 }
 
 /* Clear memory consumed by current and previous commands and exit program. */
-static void quit_shell(int cmd_args, char** cmd, int prev_args, char** prev_cmd) {
-	for (int i = 0; i < cmd_args; i++) {
+static void quit_shell(char** cmd, char** prev_cmd) {
+	for (int i = 0; i < MAX_CMDLEN; i++) {
 		free(cmd[i]);
-	}
-	for (int i = 0; i < prev_args; i++) {
 		free(prev_cmd[i]);
 	}
 	exit(0);
-}
-
-/* Update prev_cmd to contain the  */
-static void update_prev() {
-	//
 }
 
 /* Changes the current working directory of the shell  */
@@ -71,30 +71,31 @@ static void change_dir(char** cmd) {
         }
 }
 
+/* Count number of arguments in the given command array. */
+static int cmd_arguments(char** cmd) {
+	int args = 0;
+	while (cmd[args] != NULL) {
+		args++;
+	}
+	return args;
+}
+
 /* Check whether the tokenized command array is a built-in command, 
  * if it is then complete custom execution. 
  * Otherwise tokenize and execute the child process. */
-static void exec_proc(int cmd_args, char** cmd, int prev_args, char** prev_cmd) {
+static void exec_proc(char** cmd, char** prev_cmd) {
 
-        // if ctrl+d requested: go to next line & quit shell
-	if (cmd[0] == NULL) {
-		printf("\nBye bye.\n");
-		quit_shell(cmd_args, cmd, prev_args, prev_cmd);
-	}
-
-	// if ctrl+d requested: quit shell
-	else if (strcmp(cmd[1], "exit") == 0) {
-		printf("Bye bye.\n");
-		quit_shell(cmd_args, cmd, prev_args, prev_cmd);
-	}
+	// length of command array for command validation
+	int cmd_args = cmd_arguments(cmd);
 
 	// if prev requested: print + execute previous command
-	else if (strcmp(cmd[0], "prev") == 0) {
+	if (strcmp(cmd[0], "prev") == 0) {
 		if (cmd_args != 1) {
 			builtin_malformed("prev", 1);
 		}
 		else {				
-			exec_child(prev_cmd);
+			exec_child(prev_cmd, prev_cmd);
+			update_prev(cmd, prev_cmd);
 		}
 	}
 
@@ -105,6 +106,7 @@ static void exec_proc(int cmd_args, char** cmd, int prev_args, char** prev_cmd) 
 		builtin_help("source", "execute commands in file, line by line");
 		builtin_help("prev", "print and execute previous command");
 		builtin_help("help", "view documentation for mini-shell builtin commands");
+		update_prev(cmd, prev_cmd);
 	}
 
 	// if cd requested: change current working directory of shell
@@ -114,6 +116,7 @@ static void exec_proc(int cmd_args, char** cmd, int prev_args, char** prev_cmd) 
 		}
 		else {
 			change_dir(cmd);
+			update_prev(cmd, prev_cmd);
 		}
 	}
 
@@ -125,18 +128,17 @@ static void exec_proc(int cmd_args, char** cmd, int prev_args, char** prev_cmd) 
 		else {
 			char line[MAX_STRLEN];
 			FILE* source_read = fopen(cmd[1], "r");
-			while (fgets(line, sizeof(line), source_read)) {
-				// save cmd, prev -> exec until cmd = eof
-				// char* new_cmd = build_cmd(line);
-				// exec_proc(sizeof(line), new_cmd);
-				printf("THIS IS A TODO");
+			// read lines from sourcefile and execute one by one until EOF
+			while (fgets(line, sizeof(line), source_read) != NULL) {
+				char new_cmd[MAX_STRLEN];
+				// exec_proc(build_cmd(new_cmd), build_cmd(prev_cmd));
 			}
 			fclose(source_read);
 		}
 	}
 
 	else {
-		exec_child(cmd);
+		exec_child(cmd, prev_cmd);
 	}
 
 }
