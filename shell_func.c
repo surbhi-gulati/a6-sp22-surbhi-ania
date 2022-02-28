@@ -55,10 +55,15 @@ static void quit_shell(int cmd_args, char* cmd, int prev_args, char* prev_cmd) {
 	exit(0);
 }
 
+/* Update prev_cmd to contain the  */
+static void update_prev() {
+	//
+}
+
 /* Check whether the tokenized command array is a built-in command, 
  * if it is then complete custom execution. 
  * Otherwise tokenize and execute the child process. */
-static void builtin_proc(int cmd_args, char* cmd, int prev_args, char* prev_cmd) {
+static void exec_proc(int cmd_args, char* cmd, int prev_args, char* prev_cmd) {
 
         // if ctrl+d requested: go to next line & quit shell
 	if (strcmp(cmd[0], NULL) == 0) {
@@ -107,7 +112,14 @@ static void builtin_proc(int cmd_args, char* cmd, int prev_args, char* prev_cmd)
 			builtin_malformed("source", 2);
 		}
 		else {
-			// read -> save cmd, prev -> exec until cmd = eof
+			char line[MAX_STRLEN];
+			FILE* source_read = fopen(source, "r");
+			while (fgets(line, sizeof(line), source_read)) {
+				// save cmd, prev -> exec until cmd = eof
+				char* new_cmd = build_cmd(line);
+				exec_proc(sizeof(line), new_cmd);
+			}
+			fclose(source_read);
 		}
 	}
 
