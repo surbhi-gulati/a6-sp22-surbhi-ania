@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
 
 	// save current and previous commands in memory
 	char input[MAX_CMDLEN];
+	char prev_input[MAX_CMDLEN];
         char* command[MAX_CMDLEN];	
 	char* prev_command[MAX_CMDLEN];
 
@@ -27,8 +28,7 @@ int main(int argc, char **argv) {
 
 		// exit if ctrl+D
 		if (flag == NULL) {
-			printf("\nBye bye.\n");
-			quit_shell(command, prev_command);
+			printf("\n");
 			break;
 		}
 
@@ -37,14 +37,14 @@ int main(int argc, char **argv) {
 		
 		// exit if command prompts exit
 		if (strcmp(command[0], "exit") == 0) {
-			printf("Bye bye.\n");
-			quit_shell(command, prev_command);
 			break;
 		}
 
 		// execute given command
-		exec_proc(command, prev_command);
+		exec_proc(command, prev_command, input, prev_input);
 	}
-	
+
+	// free memory, print closing message, and exit program	
+	quit_shell(command, prev_command);	
 	return 0;
 }
