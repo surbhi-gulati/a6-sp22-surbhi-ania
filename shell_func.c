@@ -20,7 +20,9 @@ static int cmd_arguments(char** cmd) {
 /* Update prev_cmd to contain the contents of the current command. */
 static void update_prev(char** cmd, char** prev_cmd, char* input, char* prev_input) {
         for (int i = 0; i < MAX_CMDLEN; i++) {
-                prev_cmd[i] = cmd[i];
+                // strncpy(prev_cmd[i], cmd[i], strlen(cmd[i]));
+		// strncpy(prev_input[i], input[i], strlen(input[i]));
+		prev_cmd[i] = cmd[i];
 		prev_input[i] = input[i];
         }
 }
@@ -63,12 +65,24 @@ static void build_cmd(char* input, char** command) {
 /* Clear memory consumed by current and previous commands and exit program. */
 static void quit_shell(char** command, char** prev_command) {
 	printf("Bye bye.\n");
-	for (int i = 0; i < MAX_CMDLEN; i++) {
+	int i = 0;
+	while (command[i] != NULL) {
 		free(command[i]);
-		free(prev_command[i]);
-	}	
-	free(command);
-	free(prev_command);
+		i++;
+	}
+
+	i = 0;
+	while (prev_command[i] != NULL) {
+		free(command[i]);
+		i++;
+	} 
+	for (int i = 0; i < MAX_CMDLEN; i++) {
+		// free(command[i]);
+		// free(prev_command[i]);
+		continue;
+	}
+	// free(command);
+	// free(prev_command);	
 	printf("REACHED QUIT SHELL\n");
 	exit(0);
 }
@@ -103,7 +117,7 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 		else {
 		        printf("%s\n", prev_input);	
 			update_prev(prev_cmd, cmd, prev_input, prev_input); // cur cmd = prev cmd			
-			exec_child(prev_cmd, prev_cmd, prev_input, prev_input);
+			exec_proc(prev_cmd, prev_cmd, prev_input, prev_input);
 		}
 	}
 
