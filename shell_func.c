@@ -60,6 +60,19 @@ static void update_prev() {
 	//
 }
 
+/* Changes the current working directory of the shell  */
+static void change_dir(char* cmd) {
+        char* dir = (char *) malloc(MAX_CMDLEN * sizeof(char));
+        dir = strncpy(dir, cmd[1], strlen(cmd[1]));
+
+        // change directory
+        int newDir = chdir(dir);
+        free(dir);
+        if (newDir < 0) {
+                printf("Error occurred while changing directory.\n");
+        }
+}
+
 /* Check whether the tokenized command array is a built-in command, 
  * if it is then complete custom execution. 
  * Otherwise tokenize and execute the child process. */
@@ -102,7 +115,7 @@ static void exec_proc(int cmd_args, char* cmd, int prev_args, char* prev_cmd) {
 			builtin_malformed("cd", 2);
 		}
 		else {
-			//
+			change_dir(cmd);
 		}
 	}
 
