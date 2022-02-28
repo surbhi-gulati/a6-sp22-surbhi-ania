@@ -37,7 +37,7 @@ static void builtin_malformed(char* cmd, int expt_args) {
 
 /* Style help documentation: bold command and provide plaintext additional information. */
 static void builtin_help(char* cmd, char* documentation) {
-	printf("\'%s\'\t\t: %s\n", cmd, documentation);
+	printf("\'%s\'  :  %s\n", cmd, documentation);
 }
 
 /* Tokenize and put STDIN command arguments in to command string array. */
@@ -64,14 +64,21 @@ static void quit_shell(char** command, char** prev_command) {
 	exit(0);
 }
 
-/* Changes the current working directory of the shell  */
-static void change_dir(char** cmd) {
-        char* dir = (char *) malloc(MAX_CMDLEN * sizeof(char));
-        strncpy(dir, cmd[1], strlen(cmd[1]));
-
-        // change directory
-        int newDir = chdir(dir);
-        free(dir);
+/* Changes the current working directory of the shell. If no directory is provided
+ * (ie. dir_given = 0) then change to home directory.  */
+static void change_dir(char** cmd, int dir_given) {
+	int newDir = -1;
+	// change to home directory
+	if (dir_given == 0) {
+		newDir = chdir("~");
+	}
+	// change to given directory
+	else {
+        	char* dir = (char *) malloc(MAX_CMDLEN * sizeof(char));
+        	strncpy(dir, cmd[1], strlen(cmd[1]));
+        	newDir = chdir(dir);
+        	free(dir);
+	}
         if (newDir < 0) {
                 printf("Error occurred while changing directory.\n");
         }
@@ -118,11 +125,12 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 
 	// if cd requested: change current working directory of shell
 	else if (strcmp(cmd[0], "cd") == 0) {
-		if (cmd_args != 2) {
-			builtin_malformed("cd", 2);
+		if (cmd_args > 2) {
+        		printf("Malformed input. Command: \'cd\' expected 1-2 arguments.\n");
+	        	printf("Enter \'help\' to view documentation.\n");
 		}
 		else {
-			change_dir(cmd);
+			change_dir(cmd, cmd_args);
 			update_prev(cmd, prev_cmd, input, prev_input);
 		}
 	}
