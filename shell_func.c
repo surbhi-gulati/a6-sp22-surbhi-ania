@@ -76,19 +76,11 @@ static void quit_shell(char** command, char** prev_command) {
 /* Changes the current working directory of the shell. If no directory is provided
  * (ie. dir_given = 0) then change to home directory.  */
 static void change_dir(char** cmd, int dir_given) {
-	int newDir = -1;
-	int cmd_args = cmd_arguments(cmd);
-	char* dir = (char *) malloc(MAX_CMDLEN * sizeof(char));
-	// change to home directory
-	if (cmd_args == 1) {
-		strncpy(dir, "..", strlen(".."));
-	}
-	// change to given directory
-	else {
-        	strncpy(dir, cmd[1], strlen(cmd[1]));
-	}
-	newDir = chdir(dir);
-        free(dir);
+        char* dir = (char *) malloc(MAX_CMDLEN * sizeof(char));
+        dir = strncpy(dir, cmd[1], strlen(cmd[1]));
+	// change directory
+        int newDir = chdir(dir);
+	free(dir);
         if (newDir < 0) {
                 printf("Error occurred while changing directory.\n");
         }
@@ -130,6 +122,8 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 		if (cmd_args > 2) {
         		printf("Malformed input. Command: \'cd\' expected 1-2 arguments.\n");
 	        	printf("Enter \'help\' to view documentation.\n");
+		} else if (cmd_args == 1) {
+			chdir("..");
 		}
 		else {
 			change_dir(cmd, cmd_args);
