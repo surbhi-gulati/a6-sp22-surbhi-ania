@@ -100,6 +100,75 @@ static void change_dir(char** cmd, int dir_given) {
         }
 }
 
+static int contains_special(char** cmd) {
+	int length = cmd_arguments(cmd);
+	for (int cmd_i = 0; cmd_i < length; cmd_i++) {
+		if (strcmp("<", cmd[cmd_i]) == 0) {
+			return 1;
+		} else if (strcmp(">", cmd[cmd_i]) == 0) {
+			return 2;
+		} else if (strcmp(";", cmd[cmd_i]) == 0) {
+			return 3;
+		} else if (strcmp("|", cmd[cmd_i]) == 0) {
+			return 4;
+		}
+	}
+	return 0;
+}
+
+static void split_array(char* element, char** original, char** first, char** second) {
+	int i_original = 0;
+	int i_first = 0;
+	int length = cmd_arguments(original);
+	while(strcmp(element, original[i_original]) != 0) {
+		first[i_first] = original[i_original];
+		i_original++;
+	}
+	int i_second = 0;
+	i_original++;
+	while (i_original < length) {
+		second[i_second] = original[i_original];
+		i_original++;
+	}
+}
+
+static void redirection_left(char** cmd) {}
+
+static void redirection_right(char** cmd) {}
+
+static void sequence(char** cmd) {
+	char *first_command[MAX_CMDLEN];
+	char *second_command[MAX_CMDLEN];
+	split_array(";", cmd, first_command, second_command);
+	if (fork() == 0) {
+		if (execvp(first_command[0], first_command) < 0) {
+                        printf("No such file or directory\n");
+                }
+	} else {
+		if (fork() == 0) {
+                	if (execvp(second_command[0], second_command) < 0) {
+                        	printf("No such file or directory\n");
+                	}
+		wait(NULL);
+		}
+	}
+}
+
+static void pipe_cmd(char** cmd) {}
+
+static void delegate_special(char** cmd) {
+	int special = contains_special(cmd);
+	if (special == 1) {
+		redirection_left(cmd);
+	} else if (special == 2) {
+		redirection_right(cmd);
+	} else if (special == 3) {
+		sequence(cmd);
+	} else if (special == 4) {
+		pipe_cmd(cmd);
+	}
+}
+
 
 /* Check whether the tokenized command array is a built-in command, 
  * if it is then complete custom execution. 
@@ -109,8 +178,11 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 	// length of command array for command validation
 	int cmd_args = cmd_arguments(cmd);
 
+	if (contains_special(cmd) > 0) {
+		delegate_special(cmd);
+	}
 	// if prev requested: print + execute previous command
-	if (strcmp(cmd[0], "prev") == 0) {
+	else if (strcmp(cmd[0], "prev") == 0) {
 		if (cmd_args != 1) {
 			builtin_malformed("prev", 1);
 		}
