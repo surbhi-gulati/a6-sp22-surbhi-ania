@@ -100,6 +100,7 @@ static void change_dir(char** cmd, int dir_given) {
         }
 }
 
+/* Checks whether the command array contains one of the special characters.  */
 static int contains_special(char** cmd) {
 	int length = cmd_arguments(cmd);
 	for (int cmd_i = 0; cmd_i < length; cmd_i++) {
@@ -116,56 +117,67 @@ static int contains_special(char** cmd) {
 	return 0;
 }
 
+/* Splits the array into two arrays, one that is on the left side of the first occurence of the symbol and the other that is on the right sideof the first occurence of the symbol. */
 static void split_array(char* element, char** original, char** first, char** second) {
 	int i_original = 0;
 	int i_first = 0;
 	int length = cmd_arguments(original);
 	while(strcmp(element, original[i_original]) != 0) {
 		first[i_first] = original[i_original];
+		i_first++;
 		i_original++;
 	}
 	int i_second = 0;
 	i_original++;
 	while (i_original < length) {
 		second[i_second] = original[i_original];
+		i_second++;
 		i_original++;
 	}
 }
 
-static void redirection_left(char** cmd) {}
+/* Redirects input into the left command. */ 
+static void redirection_left(char** cmd, char** prev_cmd, char* input, char* prev_input) {}
 
-static void redirection_right(char** cmd) {}
+/* Redirects output of left command into right. */
+static void redirection_right(char** cmd, char** prev_cmd, char* input, char* prev_input) {}
 
-static void sequence(char** cmd) {
+/* Sequences a function. */
+static void sequence(char** cmd, char** prev_cmd, char* input, char* prev_input) {
 	char *first_command[MAX_CMDLEN];
 	char *second_command[MAX_CMDLEN];
 	split_array(";", cmd, first_command, second_command);
 	if (fork() == 0) {
-		if (execvp(first_command[0], first_command) < 0) {
+                if (execvp(first_command[0], first_command) < 0) {
                         printf("No such file or directory\n");
                 }
-	} else {
+        }
+        else {
+                wait(NULL);
 		if (fork() == 0) {
-                	if (execvp(second_command[0], second_command) < 0) {
+			if (execvp(second_command[0], second_command) < 0) {
                         	printf("No such file or directory\n");
                 	}
-		wait(NULL);
+		} else {
+			wait(NULL);
 		}
-	}
+        }        
 }
 
-static void pipe_cmd(char** cmd) {}
+/* Pipes output of left side command as input of the right side command. */
+static void pipe_cmd(char** cmd, char** prev_cmd, char* input, char* prev_input) {}
 
-static void delegate_special(char** cmd) {
+/* Delegates to the correct special token function depending on the output of contains_special.  */
+static void delegate_special(char** cmd, char** prev_cmd, char* input, char* prev_input) {
 	int special = contains_special(cmd);
 	if (special == 1) {
-		redirection_left(cmd);
+		redirection_left(cmd, prev_cmd, input, prev_input);
 	} else if (special == 2) {
-		redirection_right(cmd);
+		redirection_right(cmd, prev_cmd, input, prev_input);
 	} else if (special == 3) {
-		sequence(cmd);
+		sequence(cmd, prev_cmd, input, prev_input);
 	} else if (special == 4) {
-		pipe_cmd(cmd);
+		pipe_cmd(cmd, prev_cmd, input, prev_input);
 	}
 }
 
@@ -179,7 +191,8 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 	int cmd_args = cmd_arguments(cmd);
 
 	if (contains_special(cmd) > 0) {
-		delegate_special(cmd);
+		delegate_special(cmd, prev_cmd, input, prev_input);
+		update_prev(cmd, prev_cmd, input, prev_input);
 	}
 	// if prev requested: print + execute previous command
 	else if (strcmp(cmd[0], "prev") == 0) {
