@@ -165,11 +165,12 @@ static void sequence(char** cmd, char** prev_cmd, char* input, char* prev_input)
 }
 
 /* Pipes output of left side command as input of the right side command. */
-static void pipe_cmd(char** cmd, char** prev_cmd, char* input, char* prev_input) {}
+static char** pipe_cmd(char** cmd, char** prev_cmd, char* input, char* prev_input) {}
 
 /* Delegates to the correct special token function depending on the output of contains_special.  */
 static void delegate_special(char** cmd, char** prev_cmd, char* input, char* prev_input) {
 	int special = contains_special(cmd);
+	// have a while loop that checks for more special characters?
 	if (special == 1) {
 		redirection_left(cmd, prev_cmd, input, prev_input);
 	} else if (special == 2) {
@@ -179,6 +180,7 @@ static void delegate_special(char** cmd, char** prev_cmd, char* input, char* pre
 	} else if (special == 4) {
 		pipe_cmd(cmd, prev_cmd, input, prev_input);
 	}
+	// when there's no more special characters, run last command
 }
 
 
