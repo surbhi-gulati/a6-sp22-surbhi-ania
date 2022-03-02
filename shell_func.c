@@ -21,9 +21,6 @@ static int cmd_arguments(char** cmd) {
 /* Update prev_cmd to contain the contents of the current command. */
 static void update_prev(char** cmd, char** prev_cmd, char* input, char* prev_input) {
         for (int i = 0; i < MAX_CMDLEN; i++) {
-                // strncpy(prev_cmd[i], cmd[i], strlen(cmd[i]));
-		// strncpy(prev_input[i], input[i], strlen(input[i]));
-		prev_cmd[i] = cmd[i];
 		prev_input[i] = input[i];
         }
 }
@@ -47,7 +44,7 @@ static void builtin_malformed(char* cmd, int expt_args) {
 	printf("Enter \'help\' to view documentation.\n");
 } 
 
-/* Style help documentation: bold command and provide plaintext additional information. */
+/* Style help documentation, given command and plaintext additional information. */
 static void builtin_help(char* cmd, char* documentation) {
 	printf("\'%s\'  :  %s\n", cmd, documentation);
 }
@@ -77,13 +74,6 @@ static void quit_shell(char** command, char** prev_command) {
 		free(command[i]);
 		i++;
 	} 
-	for (int i = 0; i < MAX_CMDLEN; i++) {
-		// free(command[i]);
-		// free(prev_command[i]);
-		continue;
-	}
-	// free(command);
-	// free(prev_command);	
 	printf("REACHED QUIT SHELL\n");
 	exit(0);
 }
@@ -204,7 +194,6 @@ static void delegate_special(char** cmd) {
 	}
 }
 
-
 /* Check whether the tokenized command array is a built-in command, 
  * if it is then complete custom execution. 
  * Otherwise tokenize and execute the child process. */
@@ -225,7 +214,16 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 		else {
 		        printf("%s\n", prev_input);	
 			update_prev(prev_cmd, cmd, prev_input, prev_input); // cur cmd = prev cmd			
-			exec_proc(prev_cmd, prev_cmd, prev_input, prev_input);
+			
+			char* new_prev[MAX_CMDLEN];
+			build_cmd(prev_input, new_prev);
+			exec_proc(new_prev, new_prev, prev_input, prev_input);
+			
+			int i = 0;
+			while (i < cmd_arguments(new_prev)) {
+				free(new_prev[i]);
+				i++;
+			}
 		}
 	}
 
