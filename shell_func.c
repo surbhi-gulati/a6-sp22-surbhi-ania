@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "shell.h"
 
@@ -137,50 +138,62 @@ static void split_array(char* element, char** original, char** first, char** sec
 }
 
 /* Redirects input into the left command. */ 
-static void redirection_left(char** cmd, char** prev_cmd, char* input, char* prev_input) {}
+static void redirection_left(char** cmd, char** first_command, char** second_command) {
+	split_array("<", cmd, first_command, second_command);
+	if (fork() == 0) {
+		close(0);
+                int fd = open(second_command[0], O_RDONLY);
+                if (execvp(first_command[0], first_command) < 0) {
+			printf("Invalid command format.\n");
+                }
+	} else {
+                wait(NULL);
+        }
+}
 
 /* Redirects output of left command into right. */
-static void redirection_right(char** cmd, char** prev_cmd, char* input, char* prev_input) {}
-
-/* Sequences a function. */
-static void sequence(char** cmd, char** prev_cmd, char* input, char* prev_input) {
-	char *first_command[MAX_CMDLEN];
-	char *second_command[MAX_CMDLEN];
-	split_array(";", cmd, first_command, second_command);
-	if (fork() == 0) {
+static void redirection_right(char** cmd, char** first_command, char** second_command) {
+	split_array(">", cmd, first_command, second_command);
+        if (fork() == 0) {
+		close(1);
+                int fd = open(second_command[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
                 if (execvp(first_command[0], first_command) < 0) {
-                        printf("No such file or directory\n");
+			printf("Invalid command format.\n");
                 }
-        }
-        else {
+	} else {
                 wait(NULL);
-		if (fork() == 0) {
-			if (execvp(second_command[0], second_command) < 0) {
-                        	printf("No such file or directory\n");
-                	}
-		} else {
-			wait(NULL);
-		}
-        }        
+        }
 }
 
 /* Pipes output of left side command as input of the right side command. */
-static char** pipe_cmd(char** cmd, char** prev_cmd, char* input, char* prev_input) {}
+static char** pipe_cmd(char** cmd) {}
 
 /* Delegates to the correct special token function depending on the output of contains_special.  */
-static void delegate_special(char** cmd, char** prev_cmd, char* input, char* prev_input) {
+static void delegate_special(char** cmd) {
 	int special = contains_special(cmd);
-	// have a while loop that checks for more special characters?
+	char *first_command[MAX_CMDLEN];
+        char *second_command[MAX_CMDLEN];
+
 	if (special == 1) {
-		redirection_left(cmd, prev_cmd, input, prev_input);
-	} else if (special == 2) {
-		redirection_right(cmd, prev_cmd, input, prev_input);
+		redirection_left(cmd, first_command, second_command);
+        } else if (special == 2) {
+        	redirection_right(cmd, first_command, second_command);
 	} else if (special == 3) {
-		sequence(cmd, prev_cmd, input, prev_input);
+		split_array(";", cmd, first_command, second_command);
+		delegate_special(first_command);
+		delegate_special(second_command);
 	} else if (special == 4) {
-		pipe_cmd(cmd, prev_cmd, input, prev_input);
+		pipe_cmd(cmd);
+
+	} else {
+		if (fork() == 0) {
+                        if (execvp(cmd[0], cmd) < 0) {
+                                printf("Invalid command format.\n");
+                        }
+                } else {
+                        wait(NULL);
+                }
 	}
-	// when there's no more special characters, run last command
 }
 
 
@@ -193,7 +206,7 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 	int cmd_args = cmd_arguments(cmd);
 
 	if (contains_special(cmd) > 0) {
-		delegate_special(cmd, prev_cmd, input, prev_input);
+		delegate_special(cmd);
 		update_prev(cmd, prev_cmd, input, prev_input);
 	}
 	// if prev requested: print + execute previous command
