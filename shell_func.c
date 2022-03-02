@@ -105,13 +105,19 @@ static void change_dir(char** cmd, int dir_given) {
 static int contains_special(char** cmd) {
 	int length = cmd_arguments(cmd);
 	for (int cmd_i = 0; cmd_i < length; cmd_i++) {
-		if (strcmp("<", cmd[cmd_i]) == 0) {
+		if (strcmp(";", cmd[cmd_i]) == 0) {
 			return 1;
-		} else if (strcmp(">", cmd[cmd_i]) == 0) {
+		}
+	}
+	for (int cmd_i = 0; cmd_i < length; cmd_i++) {
+		if (strcmp("|", cmd[cmd_i]) == 0) {
 			return 2;
-		} else if (strcmp(";", cmd[cmd_i]) == 0) {
+		}
+	} 
+	for (int cmd_i = 0; cmd_i < length; cmd_i++) {
+		if (strcmp("<", cmd[cmd_i]) == 0) {
 			return 3;
-		} else if (strcmp("|", cmd[cmd_i]) == 0) {
+		} else if (strcmp(">", cmd[cmd_i]) == 0) {
 			return 4;
 		}
 	}
@@ -174,17 +180,19 @@ static void delegate_special(char** cmd) {
 	char *first_command[MAX_CMDLEN];
         char *second_command[MAX_CMDLEN];
 
+	// sequence is included in command
 	if (special == 1) {
-		redirection_left(cmd, first_command, second_command);
-        } else if (special == 2) {
-        	redirection_right(cmd, first_command, second_command);
-	} else if (special == 3) {
 		split_array(";", cmd, first_command, second_command);
-		delegate_special(first_command);
-		delegate_special(second_command);
-	} else if (special == 4) {
+                delegate_special(first_command);
+                delegate_special(second_command);
+	// pipe is included in command
+        } else if (special == 2) {
 		pipe_cmd(cmd);
-
+	// redirection is included in command
+	} else if (special == 3) {
+		redirection_left(cmd, first_command, second_command);
+	} else if (special == 4) {
+		redirection_right(cmd, first_command, second_command);
 	} else {
 		if (fork() == 0) {
                         if (execvp(cmd[0], cmd) < 0) {
