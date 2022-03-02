@@ -19,7 +19,6 @@ int main(int argc, char **argv) {
 	char input[MAX_CMDLEN];
 	char prev_input[MAX_CMDLEN];
         char* command[MAX_CMDLEN];	
-	char* prev_command[MAX_CMDLEN];
 
 	// get commands continuously until exit via ctrl+D or exit cmd
 	while (1) {
@@ -41,10 +40,10 @@ int main(int argc, char **argv) {
 		}
 
 		// execute given command
-		exec_proc(command, prev_command, input, prev_input);
+		exec_proc(command, input, prev_input);
 	}
 
 	// free memory, print closing message, and exit program	
-	quit_shell(command, prev_command);	
+	quit_shell(command);	
 	return 0;
 }

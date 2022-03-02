@@ -18,15 +18,15 @@ static int cmd_arguments(char** cmd) {
         return args;
 }
 
-/* Update prev_cmd to contain the contents of the current command. */
-static void update_prev(char** cmd, char** prev_cmd, char* input, char* prev_input) {
+/* Update prev_input to contain the contents of the current input. */
+static void update_prev(char* input, char* prev_input) {
         for (int i = 0; i < MAX_CMDLEN; i++) {
 		prev_input[i] = input[i];
         }
 }
 
 /* Process given child program on foreground. */
-static void exec_child(char** cmd, char** prev_cmd, char* input, char* prev_input) {
+static void exec_child(char** cmd, char* input, char* prev_input) {
 	if (fork() == 0) {
                 if (execvp(cmd[0], cmd) < 0) {
 			printf("No such file or directory\n");
@@ -34,7 +34,7 @@ static void exec_child(char** cmd, char** prev_cmd, char* input, char* prev_inpu
         }
 	else {
 		wait(NULL);
-		update_prev(cmd, prev_cmd, input, prev_input);
+		update_prev(input, prev_input);
         }
 }
 
@@ -61,20 +61,13 @@ static void build_cmd(char* input, char** command) {
 }
 
 /* Clear memory consumed by current and previous commands and exit program. */
-static void quit_shell(char** command, char** prev_command) {
+static void quit_shell(char** command) {
 	printf("Bye bye.\n");
 	int i = 0;
 	while (command[i] != NULL) {
 		free(command[i]);
 		i++;
 	}
-
-	i = 0;
-	while (prev_command[i] != NULL) {
-		free(command[i]);
-		i++;
-	} 
-	printf("REACHED QUIT SHELL\n");
 	exit(0);
 }
 
@@ -83,6 +76,7 @@ static void quit_shell(char** command, char** prev_command) {
 static void change_dir(char** cmd, int dir_given) {
         char* dir = (char *) malloc(MAX_CMDLEN * sizeof(char));
         dir = strncpy(dir, cmd[1], strlen(cmd[1]));
+	
 	// change directory
         int newDir = chdir(dir);
 	free(dir);
@@ -114,7 +108,8 @@ static int contains_special(char** cmd) {
 	return 0;
 }
 
-/* Splits the array into two arrays, one that is on the left side of the first occurence of the symbol and the other that is on the right sideof the first occurence of the symbol. */
+/* Splits the array into two arrays, one that is on the left side of the first occurence of 
+ * the symbol and the other that is on the right sideof the first occurence of the symbol. */
 static void split_array(char* element, char** original, char** first, char** second) {
 	int i_original = 0;
 	int i_first = 0;
@@ -197,14 +192,14 @@ static void delegate_special(char** cmd) {
 /* Check whether the tokenized command array is a built-in command, 
  * if it is then complete custom execution. 
  * Otherwise tokenize and execute the child process. */
-static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input) {
+static void exec_proc(char** cmd, char* input, char* prev_input) {
 
 	// length of command array for command validation
 	int cmd_args = cmd_arguments(cmd);
 
 	if (contains_special(cmd) > 0) {
 		delegate_special(cmd);
-		update_prev(cmd, prev_cmd, input, prev_input);
+		update_prev(input, prev_input);
 	}
 	// if prev requested: print + execute previous command
 	else if (strcmp(cmd[0], "prev") == 0) {
@@ -212,16 +207,15 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 			builtin_malformed("prev", 1);
 		}
 		else {
-		        printf("%s\n", prev_input);	
-			update_prev(prev_cmd, cmd, prev_input, prev_input); // cur cmd = prev cmd			
+		        printf("%s\n", prev_input);			
 			
-			char* new_prev[MAX_CMDLEN];
-			build_cmd(prev_input, new_prev);
-			exec_proc(new_prev, new_prev, prev_input, prev_input);
+			char* prev_cmd[MAX_CMDLEN];
+			build_cmd(prev_input, prev_cmd);
+			exec_proc(prev_cmd, prev_input, prev_input);
 			
 			int i = 0;
-			while (i < cmd_arguments(new_prev)) {
-				free(new_prev[i]);
+			while (i < cmd_arguments(prev_cmd)) {
+				free(prev_cmd[i]);
 				i++;
 			}
 		}
@@ -234,7 +228,7 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 		builtin_help("source", "execute commands in file, line by line");
 		builtin_help("prev", "print and execute previous command");
 		builtin_help("help", "view documentation for mini-shell builtin commands");
-		update_prev(cmd, prev_cmd, input, prev_input);
+		update_prev(input, prev_input);
 	}
 
 	// if cd requested: change current working directory of shell
@@ -247,7 +241,7 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 		}
 		else {
 			change_dir(cmd, cmd_args);
-			update_prev(cmd, prev_cmd, input, prev_input);
+			update_prev(input, prev_input);
 		}
 	}
 
@@ -262,14 +256,14 @@ static void exec_proc(char** cmd, char** prev_cmd, char* input, char* prev_input
 			// read lines from sourcefile and execute one by one until EOF
 			while (fgets(line, sizeof(line), source_read) != NULL) {
 				build_cmd(line, cmd);
-				exec_proc(cmd, prev_cmd, input, prev_input);
+				exec_proc(cmd, input, prev_input);
 			}
 			fclose(source_read);
 		}
 	}
 
 	else {
-		exec_child(cmd, prev_cmd, input, prev_input);
+		exec_child(cmd, input, prev_input);
 	}
 
 }
