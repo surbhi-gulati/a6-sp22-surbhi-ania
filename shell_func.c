@@ -214,6 +214,15 @@ static void delegate_special(char** cmd) {
 	}
 }
 
+/* Free the data in the command given. */
+static void free_command(char** cmd) {
+	int i = 0;
+	while (i < cmd_arguments(cmd)) {
+		free(cmd[i]);
+		i++;
+	}
+}
+
 /* Check whether the tokenized command array is a built-in command, 
  * if it is then complete custom execution. 
  * Otherwise tokenize and execute the child process. */
@@ -237,12 +246,6 @@ static void exec_proc(char** cmd, char* input, char* prev_input) {
 			char* prev_cmd[MAX_CMDLEN];
 			build_cmd(prev_input, prev_cmd);
 			exec_proc(prev_cmd, prev_input, prev_input);
-			
-			int i = 0;
-			while (i < cmd_arguments(prev_cmd)) {
-				free(prev_cmd[i]);
-				i++;
-			}
 		}
 	}
 
@@ -291,4 +294,6 @@ static void exec_proc(char** cmd, char* input, char* prev_input) {
 		exec_child(cmd, input, prev_input);
 	}
 
+	// free memory in command as execution is complete
+	free_command(cmd);
 }
