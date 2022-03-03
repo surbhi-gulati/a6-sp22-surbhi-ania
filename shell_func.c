@@ -168,23 +168,51 @@ static void delegate_special(char** cmd) {
 	// sequence is included in command
 	if (special == 1) {
 		split_array(";", cmd, first_command, second_command);
-                delegate_special(first_command);
-                delegate_special(second_command);
+		if (fork() == 0) {
+			delegate_special(first_command);
+		} else {
+			wait(NULL);
+			if (fork() == 0) {
+				delegate_special(second_command);
+			} else {
+				wait(NULL);
+			}
+		}
 	// pipe is included in command
         } else if (special == 2) {
-		pipe_cmd(cmd);
+		split_array("|", cmd, first_command, second_command);
+    		
+		// child A
+		if (fork() == 0) {
+			int pipe_fds[2];
+			pipe(pipe_fds);
+                	int read_fd = pipe_fds[0];
+                	int write_fd = pipe_fds[1];
+
+			// child B
+			if (fork() == 0) {
+				close(read_fd); //close other end of pipe
+                        	close(1); // replace stout with write end
+                        	dup(write_fd);
+				delegate_special(first_command);
+			} else {
+				close(write_fd); // close other end of pipe
+                        	close(0); // replace stdin with read end
+                        	dup(read_fd);
+                        	delegate_special(second_command);
+				wait(NULL);
+			}
+		} else {
+			wait(NULL);
+		}
 	// redirection is included in command
 	} else if (special == 3) {
 		redirection_left(cmd, first_command, second_command);
 	} else if (special == 4) {
 		redirection_right(cmd, first_command, second_command);
 	} else {
-		if (fork() == 0) {
-                        if (execvp(cmd[0], cmd) < 0) {
-                                printf("Invalid command format.\n");
-                        }
-                } else {
-                        wait(NULL);
+        	if (execvp(cmd[0], cmd) < 0) {
+        		printf("Invalid command format.\n");
                 }
 	}
 }
