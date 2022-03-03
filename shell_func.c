@@ -156,9 +156,6 @@ static void redirection_right(char** cmd, char** first_command, char** second_co
         }
 }
 
-/* Pipes output of left side command as input of the right side command. */
-static char** pipe_cmd(char** cmd) {}
-
 /* Delegates to the correct special token function depending on the output of contains_special.  */
 static void delegate_special(char** cmd) {
 	int special = contains_special(cmd);
