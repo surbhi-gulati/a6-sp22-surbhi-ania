@@ -351,6 +351,10 @@ static void exec_proc(char** cmd, char* input, char* prev_input) {
 			// read lines from sourcefile and execute one by one until EOF
 			while (fgets(line, sizeof(line), source_read) != NULL) {
 				build_cmd(line, new_cmd);
+				if (strcmp(new_cmd[0], "exit") == 0) {
+					free_command(new_cmd);
+					break;
+				}
 				exec_proc(new_cmd, line, prev_line);
 				free_command(new_cmd);
 			}
