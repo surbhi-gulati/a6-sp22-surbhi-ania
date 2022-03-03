@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 
 		// exit if ctrl+D
 		if (flag == NULL) {
-			printf("\n");
+			printf("\nBye bye.\n");
 			break;
 		}
 
@@ -36,6 +36,7 @@ int main(int argc, char **argv) {
 		
 		// exit if command prompts exit
 		if (strcmp(command[0], "exit") == 0) {
+			quit_shell(command);
 			break;
 		}
 
@@ -44,6 +45,5 @@ int main(int argc, char **argv) {
 	}
 
 	// free memory, print closing message, and exit program	
-	quit_shell(command);	
 	return 0;
 }
