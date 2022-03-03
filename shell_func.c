@@ -310,6 +310,8 @@ static void exec_proc(char** cmd, char* input, char* prev_input) {
 			char* prev_cmd[MAX_CMDLEN];
 			build_cmd(prev_input, prev_cmd);
 			exec_proc(prev_cmd, prev_input, prev_input);
+
+			free_command(prev_cmd);
 		}
 	}
 
