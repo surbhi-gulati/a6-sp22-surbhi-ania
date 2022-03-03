@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include "shell.h"
 
@@ -196,8 +197,9 @@ static void delegate_special(char** cmd) {
 				close(write_fd); // close other end of pipe
                         	close(0); // replace stdin with read end
                         	dup(read_fd);
-                        	delegate_special(second_command);
-				wait(NULL);
+				delegate_special(second_command);
+                                wait(NULL);
+                                exit(0);
 			}
 		} else {
 			wait(NULL);
@@ -211,6 +213,59 @@ static void delegate_special(char** cmd) {
         	if (execvp(cmd[0], cmd) < 0) {
         		printf("Invalid command format.\n");
                 }
+	}
+}
+
+/* Finds the number of pipes present in a command. */
+static int get_num_pipes(char** cmd) {
+	int index = 0;
+	int pipe_count = 0;
+        while (cmd[index] != NULL) {
+                if (strcmp("|", cmd[index]) == 0) {
+                        pipe_count++;
+                }
+		index++;
+        }
+        return pipe_count;
+}
+
+/* Executes a command with a single pipe. */
+static void single_pipe(char** cmd) {
+	char *first_command[MAX_CMDLEN];
+        char *second_command[MAX_CMDLEN];
+        split_array("|", cmd, first_command, second_command);
+
+        // child A
+        if (fork() == 0) {
+        	int pipe_fds[2];
+                pipe(pipe_fds);
+                int read_fd = pipe_fds[0];
+                int write_fd = pipe_fds[1];
+
+                // child B
+                if (fork() == 0) {
+	                close(read_fd); //close other end of pipe
+                        close(1); // replace stout with write end
+                        dup(write_fd);
+                        delegate_special(first_command);
+		} else {
+              	        close(write_fd); // close other end of pipe
+                        close(0); // replace stdin with read end
+                        dup(read_fd);
+                        delegate_special(second_command);
+                        wait(NULL);
+                }
+	} else {
+		wait(NULL);
+        }
+}
+
+/* Checks if the number of pipes is greater than 1. */
+static void check_pipes(char** cmd) {
+	if (get_num_pipes(cmd) > 1) {
+		delegate_special(cmd);
+	} else {
+		single_pipe(cmd);
 	}
 }
 
@@ -232,7 +287,12 @@ static void exec_proc(char** cmd, char* input, char* prev_input) {
 	int cmd_args = cmd_arguments(cmd);
 
 	if (contains_special(cmd) > 0) {
-		delegate_special(cmd);
+		// check for number of pipes
+		if (contains_special(cmd) == 2) {
+			check_pipes(cmd);
+		} else {
+			delegate_special(cmd);
+		}
 		update_prev(input, prev_input);
 	}
 	// if prev requested: print + execute previous command
