@@ -343,14 +343,16 @@ static void exec_proc(char** cmd, char* input, char* prev_input) {
 			builtin_malformed("source", 2);
 		}
 		else {
+			char* new_cmd[MAX_STRLEN];
 			char line[MAX_STRLEN];
 			char prev_line[MAX_STRLEN];
 
 			FILE* source_read = fopen(cmd[1], "r");
 			// read lines from sourcefile and execute one by one until EOF
 			while (fgets(line, sizeof(line), source_read) != NULL) {
-				build_cmd(line, cmd);
-				exec_proc(cmd, line, prev_line);
+				build_cmd(line, new_cmd);
+				exec_proc(new_cmd, line, prev_line);
+				free_command(new_cmd);
 			}
 			fclose(source_read);
 		}
