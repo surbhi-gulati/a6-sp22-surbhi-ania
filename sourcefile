@@ -1,4 +1,0 @@
-echo sourcefile entered... will do ls command 
-ls
-echo sourcefile successfully executed!
-ls
