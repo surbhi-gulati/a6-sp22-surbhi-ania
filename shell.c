@@ -42,6 +42,9 @@ int main(int argc, char **argv) {
 
 		// execute given command
 		exec_proc(command, input, prev_input);
+
+		// free memory in command as execution is complete
+        	free_command(command);
 	}
 
 	// free memory, print closing message, and exit program	

@@ -31,6 +31,7 @@ static void exec_child(char** cmd, char* input, char* prev_input) {
 	if (fork() == 0) {
                 if (execvp(cmd[0], cmd) < 0) {
 			printf("No such file or directory\n");
+			exit(0);
         	}
         }
 	else {
@@ -137,6 +138,7 @@ static void redirection_left(char** cmd, char** first_command, char** second_com
                 int fd = open(second_command[0], O_RDONLY);
                 if (execvp(first_command[0], first_command) < 0) {
 			printf("Invalid command format.\n");
+			exit(0);
                 }
 	} else {
                 wait(NULL);
@@ -151,6 +153,7 @@ static void redirection_right(char** cmd, char** first_command, char** second_co
                 int fd = open(second_command[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
                 if (execvp(first_command[0], first_command) < 0) {
 			printf("Invalid command format.\n");
+			exit(0);
                 }
 	} else {
                 wait(NULL);
@@ -212,6 +215,7 @@ static void delegate_special(char** cmd) {
 	} else {
         	if (execvp(cmd[0], cmd) < 0) {
         		printf("Invalid command format.\n");
+			exit(0);
                 }
 	}
 }
@@ -340,11 +344,13 @@ static void exec_proc(char** cmd, char* input, char* prev_input) {
 		}
 		else {
 			char line[MAX_STRLEN];
+			char prev_line[MAX_STRLEN];
+
 			FILE* source_read = fopen(cmd[1], "r");
 			// read lines from sourcefile and execute one by one until EOF
 			while (fgets(line, sizeof(line), source_read) != NULL) {
 				build_cmd(line, cmd);
-				exec_proc(cmd, input, prev_input);
+				exec_proc(cmd, line, prev_line);
 			}
 			fclose(source_read);
 		}
@@ -353,7 +359,4 @@ static void exec_proc(char** cmd, char* input, char* prev_input) {
 	else {
 		exec_child(cmd, input, prev_input);
 	}
-
-	// free memory in command as execution is complete
-	free_command(cmd);
 }
